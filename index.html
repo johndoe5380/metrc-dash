@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scale=1"><title>METRC Dashboard — Next1 Labs</title>
+<style>
+:root{color-scheme:light;--ink:#1d2430;--mut:#6b7380;--line:#e3e6ea;--bg:#f6f7f9;--acc:#0f6e5a;--red:#b42318;--amb:#b26b00;--grn:#11795b}
+*{box-sizing:border-box}body{margin:0;font:13px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);background:var(--bg)}
+header{display:flex;align-items:center;gap:16px;padding:12px 18px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+header h1{font-size:15px;margin:0}#sync{color:var(--mut);font-size:12px;margin-left:auto}
+nav{display:flex;gap:4px;padding:8px 18px 0;background:#fff;border-bottom:1px solid var(--line)}
+nav button{border:0;background:none;padding:8px 12px;font:inherit;cursor:pointer;color:var(--mut);border-bottom:2px solid transparent}
+nav button.on{color:var(--ink);border-color:var(--acc);font-weight:600}
+main{padding:16px 18px}.tab{display:none}.tab.on{display:block}
+.cards{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}.card{background:#fff;border:1px solid var(--line);border-radius:8px;padding:10px 14px;min-width:140px;cursor:pointer}
+.card b{display:block;font-size:20px}.card.sel{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc)}
+table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{background:#fafbfc;font-weight:600;font-size:12px;color:var(--mut);position:sticky;top:0;cursor:pointer}
+tr.click{cursor:pointer}tr.click:hover td{background:#f2f8f6}td.n{text-align:right;font-variant-numeric:tabular-nums}
+.tag{display:inline-block;padding:1px 6px;border-radius:10px;font-size:11px;background:#eef0f3}.tag.f{background:#fde8e6;color:var(--red)}.tag.p{background:#e3f4ec;color:var(--grn)}.tag.a{background:#fff3dc;color:var(--amb)}
+.tools{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap}input,select{font:inherit;padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:#fff}
+button.b{font:inherit;padding:5px 10px;border:1px solid var(--acc);color:var(--acc);background:#fff;border-radius:6px;cursor:pointer}button.b:hover{background:#f2f8f6}
+.lbl{font-family:ui-monospace,Menlo,monospace;font-size:12px}a.lk{color:var(--acc);cursor:pointer;text-decoration:underline}
+#drawer{position:fixed;top:0;right:0;bottom:0;width:min(760px,96vw);background:#fff;border-left:1px solid var(--line);box-shadow:-6px 0 20px rgba(0,0,0,.08);transform:translateX(105%);transition:.2s;z-index:10;overflow:auto;padding:16px 18px}
+#drawer.on{transform:none}#drawer h2{font-size:15px;margin:0 0 4px}.kv{display:grid;grid-template-columns:150px 1fr;gap:3px 10px;margin:10px 0}.kv div:nth-child(odd){color:var(--mut)}
+h3{font-size:13px;margin:16px 0 6px}.x{float:right;font-size:18px;cursor:pointer;color:var(--mut)}.muted{color:var(--mut)}.err{color:var(--red)}
+.stat{display:inline-block;margin-right:16px}.stat b{font-size:15px}
+</style></head>
+<body>
+<header><h1>METRC — Next1 Labs</h1><span class="muted">read-only mirror · all licenses</span><span id="sync">loading…</span></header>
+<nav><button data-t="testing" class="on">Testing</button><button data-t="transfers">Incoming transfers</button><button data-t="adj">Adjustment flags</button><button data-t="pkg">Package lookup</button></nav>
+<main>
+<section id="testing" class="tab on"><div class="cards" id="tcards"></div><div class="tools"><input id="tq" placeholder="Filter item / label / license"><select id="tlic"></select></div><div id="ttable">Loading…</div></section>
+<section id="transfers" class="tab"><div class="tools"><select id="xdays"><option value="14">Last 14 days</option><option value="30" selected>Last 30 days</option><option value="60">Last 60 days</option><option value="120">Last 120 days</option></select>
+<label><input type="checkbox" id="xself"> include N1 → N1 / returns</label><select id="xlic"></select><input id="xq" placeholder="Filter shipper / manifest / invoice"></div><div id="xtable">Loading…</div></section>
+<section id="adj" class="tab"><div class="tools"><select id="adays"><option value="30">Last 30 days</option><option value="60" selected>Last 60 days</option><option value="120">Last 120 days</option><option value="300">Since Jan</option></select><span class="muted">Flag = |adjustment| ≥ 1,000g or ≥ 10% of the package's original weight</span></div><div id="asum"></div><div id="atable">Loading…</div><h3>Adjustments by user</h3><div id="auser"></div></section>
+<section id="pkg" class="tab"><div class="tools"><input id="plabel" class="lbl" size="30" placeholder="Package tag, e.g. 1A4000B000284ED000141237"><button class="b" id="pgo">Look up</button></div><div class="muted">Tip: click any package tag anywhere on this page to open it.</div></section>
+</main>
+<div id="drawer"></div>
+<script>
+const SB = "https://cstqopdbobfcbmphaijl.supabase.co";
+const ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNzdHFvcGRib2JmY2JtcGhhaWpsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI1Mjc1ODQsImV4cCI6MjEwODEwMzU4NH0._NW7IvBHx1muA32MfC-5uE5aYU1BOvxWb6EfQiVuvlk"; // public read key: tables are locked; data only comes back with the passcode
+function code() {
+  let c = null; try { c = localStorage.getItem("metrc_code"); } catch (e) {}
+  if (!c) { c = (prompt("Passcode") || "").trim(); try { localStorage.setItem("metrc_code", c); } catch (e) {} }
+  return c;
+}
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt = (n, d=2) => n == null || n === "" ? "" : Number(n).toLocaleString(undefined, {minimumFractionDigits:d, maximumFractionDigits:d});
+const g = (n) => n == null ? "" : fmt(n, 1) + "g";
+async function feed(args) {
+  const [cmd, ...rest] = args.split(" ");
+  const r = await fetch(`${SB}/rest/v1/rpc/metrc_feed`, { method: "POST",
+    headers: { apikey: ANON, Authorization: "Bearer " + ANON, "content-type": "application/json" },
+    body: JSON.stringify({ p_code: code(), p_cmd: cmd, p_arg: rest.join(" ") || null }) });
+  if (r.status === 403) { try { localStorage.removeItem("metrc_code"); } catch (e) {} throw new Error("Wrong passcode — reload the page to try again."); }
+  if (!r.ok) throw new Error(`Data error ${r.status}: ${(await r.text()).slice(0, 200)}`);
+  return r.json();
+}
+async function openCoa(id) {
+  const r = await fetch(`${SB}/functions/v1/metrc-coa?id=${id}`, { headers: { apikey: ANON, Authorization: "Bearer " + ANON, "x-dash-code": code() } });
+  if (!r.ok) throw new Error("COA " + r.status);
+  const url = URL.createObjectURL(await r.blob());
+  window.open(url, "_blank") || (location.href = url);
+}
+const lblLink = l => `<a class="lk lbl" data-label="${esc(l)}">${esc(l)}</a>`;
+document.addEventListener("click", e => { const a = e.target.closest("[data-label]"); if (a) { e.preventDefault(); openPkg(a.dataset.label); } });
+document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
+  document.querySelectorAll("nav button").forEach(x => x.classList.toggle("on", x === b));
+  document.querySelectorAll(".tab").forEach(t => t.classList.toggle("on", t.id === b.dataset.t));
+  if (b.dataset.t === "transfers" && !X.loaded) loadTransfers();
+  if (b.dataset.t === "adj" && !A.loaded) loadAdj();
+});
+function table(cols, rows, opts = {}) {
+  if (!rows.length) return `<div class="muted">Nothing here.</div>`;
+  const head = cols.map((c, i) => `<th data-i="${i}" class="${c.n ? "n" : ""}">${esc(c.h)}</th>`).join("");
+  const body = rows.map((r, ri) => `<tr class="${opts.click ? "click" : ""}" data-ri="${ri}">` + cols.map(c => `<td class="${c.n ? "n" : ""}">${c.f ? c.f(r) : esc(r[c.k])}</td>`).join("") + `</tr>`).join("");
+  return `<table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
+}
+function sortable(el, cols, rows, render) {
+  el.querySelectorAll("th").forEach(th => th.onclick = () => {
+    const c = cols[th.dataset.i]; const k = c.sk || c.k; if (!k) return;
+    const dir = th.dataset.dir === "asc" ? -1 : 1; th.dataset.dir = dir === 1 ? "asc" : "desc";
+    rows.sort((a, b) => { const x = a[k], y = b[k]; return (x == null) - (y == null) || (x > y ? dir : x < y ? -dir : 0); });
+    render();
+  });
+}
+function licOpts(sel, rows) { const L = [...new Set(rows.map(r => r.license))].sort(); sel.innerHTML = `<option value="">All licenses</option>` + L.map(l => `<option>${l}</option>`).join(""); }
+
+// ---------- Sync status
+(async () => {
+  try {
+    const s = await feed("summary");
+    const last = s.sync.map(r => r.last_success).filter(Boolean).sort().pop();
+    const errs = s.sync.filter(r => r.last_error);
+    document.getElementById("sync").innerHTML = `Last sync ${last ? new Date(last).toLocaleString() : "—"}` + (errs.length ? ` · <span class="err" title="${esc(errs.map(e => e.license + " " + e.entity + ": " + e.last_error).join("\n"))}">${errs.length} sync warning(s)</span>` : "");
+  } catch (e) { document.getElementById("sync").innerHTML = `<span class="err">${esc(e.message)}</span>`; }
+})();
+
+// ---------- Testing
+const T = { rows: [], bucket: "awaiting" };
+const tagFor = s => /Fail/.test(s) ? "f" : /Pass/.test(s) ? "p" : "a";
+const tcols = [
+  { h: "Tag", k: "label", f: r => lblLink(r.label) }, { h: "Item", k: "item_name" }, { h: "License", k: "license" },
+  { h: "Qty", k: "quantity", n: 1, f: r => fmt(r.quantity, 2) + " " + esc(r.uom) },
+  { h: "Lab status", k: "lab_state", f: r => `<span class="tag ${tagFor(r.lab_state)}">${esc(r.lab_state)}</span>` + (r.failed_tests ? `<div class="muted" style="font-size:11px">${esc(r.failed_tests)}</div>` : "") },
+  { h: "Status date", k: "lab_state_date" }, { h: "Packaged", k: "packaged_date" }, { h: "Pkg", k: "status" },
+  { h: "COA", k: "coa_doc_id", f: r => r.coa_doc_id ? `<button class="b" data-coa="${r.coa_doc_id}">Open COA</button>` : `<span class="muted">—</span>` },
+];
+function renderTesting() {
+  const q = document.getElementById("tq").value.toLowerCase(), lic = document.getElementById("tlic").value;
+  const cnt = b => T.rows.filter(r => r.bucket === b && (!lic || r.license === lic)).length;
+  document.getElementById("tcards").innerHTML = [["awaiting", "Awaiting results"], ["recent", "Returned (14 days)"], ["failed", "Failed"]]
+    .map(([b, h]) => `<div class="card ${T.bucket === b ? "sel" : ""}" data-b="${b}"><b>${cnt(b)}</b>${h}</div>`).join("");
+  document.querySelectorAll("#tcards .card").forEach(c => c.onclick = () => { T.bucket = c.dataset.b; renderTesting(); });
+  const rows = T.rows.filter(r => r.bucket === T.bucket && (!lic || r.license === lic) && (!q || [r.label, r.item_name, r.license].join(" ").toLowerCase().includes(q)));
+  const el = document.getElementById("ttable"); el.innerHTML = table(tcols, rows); sortable(el, tcols, T.rows, renderTesting);
+}
+(async () => {
+  try { T.rows = await feed("testing"); licOpts(document.getElementById("tlic"), T.rows); renderTesting(); }
+  catch (e) { document.getElementById("ttable").innerHTML = `<div class="err">${esc(e.message)}</div>`; }
+})();
+document.getElementById("tq").oninput = renderTesting; document.getElementById("tlic").onchange = renderTesting;
+document.addEventListener("click", async e => {
+  const b = e.target.closest("[data-coa]"); if (!b) return;
+  const t = b.textContent; b.textContent = "Opening…"; b.disabled = true;
+  try { await openCoa(Number(b.dataset.coa)); b.textContent = "Opened ✓"; } catch (err) { b.textContent = "Failed"; console.error(err); }
+  setTimeout(() => { b.textContent = t; b.disabled = false; }, 3000);
+});
+
+// ---------- Transfers
+const X = { rows: [], loaded: false };
+const xcols = [
+  { h: "Manifest", k: "manifest_number" }, { h: "Shipper", k: "shipper_name" }, { h: "To license", k: "license" }, { h: "Invoice", k: "invoice_number" },
+  { h: "Created", k: "created_at", f: r => esc((r.created_at || "").slice(0, 10)) },
+  { h: "Received", k: "received_at", f: r => r.received_at ? esc(r.received_at.slice(0, 10)) : `<span class="tag a">pending</span>` },
+  { h: "Pkgs", k: "package_count", n: 1 }, { h: "Shipped lbs", k: "shipped_lb", n: 1, f: r => fmt(r.shipped_lb, 3) + (r.has_unconverted ? ` <span class="tag a" title="some packages are counted in units without a unit weight">*</span>` : "") },
+  { h: "Received lbs", k: "received_lb", n: 1, f: r => fmt(r.received_lb, 3) }, { h: "Shipped g", k: "shipped_g", n: 1, f: r => fmt(r.shipped_g, 1) },
+];
+function xFiltered() {
+  const self = document.getElementById("xself").checked, lic = document.getElementById("xlic").value, q = document.getElementById("xq").value.toLowerCase();
+  return X.rows.filter(r => (self || r.shipper_license !== r.license) && (!lic || r.license === lic) && (!q || [r.manifest_number, r.shipper_name, r.invoice_number].join(" ").toLowerCase().includes(q)));
+}
+function renderTransfers() {
+  const rows = xFiltered(); const el = document.getElementById("xtable");
+  const tot = rows.reduce((a, r) => a + (Number(r.shipped_lb) || 0), 0);
+  el.innerHTML = `<div style="margin-bottom:8px"><span class="stat"><b>${rows.length}</b> manifests</span><span class="stat"><b>${fmt(tot, 2)}</b> lbs shipped</span><span class="muted">Click a manifest for package detail</span></div>` + table(xcols, rows, { click: 1 });
+  sortable(el, xcols, X.rows, renderTransfers);
+  el.querySelectorAll("tr.click").forEach(tr => tr.onclick = () => openManifest(rows[tr.dataset.ri]));
+}
+async function loadTransfers() {
+  X.loaded = true; document.getElementById("xtable").textContent = "Loading…";
+  try { X.rows = await feed("transfers " + document.getElementById("xdays").value); licOpts(document.getElementById("xlic"), X.rows); renderTransfers(); }
+  catch (e) { document.getElementById("xtable").innerHTML = `<div class="err">${esc(e.message)}</div>`; }
+}
+["xself", "xlic"].forEach(id => document.getElementById(id).onchange = renderTransfers); document.getElementById("xq").oninput = renderTransfers;
+document.getElementById("xdays").onchange = loadTransfers;
+const toG = (q, u, w) => { if (q == null) return null; u = (u || "").toLowerCase(); return u.startsWith("gram") || u === "g" ? q : u.startsWith("kilo") || u === "kg" ? q * 1000 : u.startsWith("pound") || u === "lb" ? q * 453.592 : u.startsWith("ounce") || u === "oz" ? q * 28.3495 : (u.startsWith("each") || u === "ea") && w ? q * w : null; };
+async function openManifest(t) {
+  const d = document.getElementById("drawer"); d.classList.add("on");
+  d.innerHTML = `<span class="x" onclick="this.parentNode.classList.remove('on')">✕</span><h2>Manifest ${esc(t.manifest_number)}</h2><div class="muted">${esc(t.shipper_name)} → ${esc(t.license)} · invoice ${esc(t.invoice_number || "—")}</div><div id="mbody">Loading…</div>`;
+  try {
+    const p = await feed("manifest " + Number(t.transfer_id));
+    p.forEach(r => { r.sg = toG(r.shipped_qty, r.shipped_uom, r.unit_weight_g); r.rg = toG(r.received_qty, r.received_uom, r.unit_weight_g); });
+    const sg = p.reduce((a, r) => a + (r.sg || 0), 0), rg = p.reduce((a, r) => a + (r.rg || 0), 0);
+    const byItem = {}; p.forEach(r => { const k = r.item_name; byItem[k] = byItem[k] || { item: k, n: 0, g: 0 }; byItem[k].n++; byItem[k].g += r.sg || 0; });
+    const lbsText = (sg / 453.592).toFixed(3);
+    document.getElementById("mbody").innerHTML =
+      `<div style="margin:10px 0"><span class="stat"><b>${fmt(sg / 453.592, 3)}</b> lbs shipped</span><span class="stat"><b>${fmt(rg / 453.592, 3)}</b> lbs received</span><span class="stat"><b>${fmt(sg, 1)}</b> g</span>
+       <button class="b" id="cpy">Copy lbs</button></div>
+       <h3>By item</h3>` + table([{ h: "Item", k: "item" }, { h: "Pkgs", k: "n", n: 1 }, { h: "lbs", k: "g", n: 1, f: r => fmt(r.g / 453.592, 3) }, { h: "g", k: "g", n: 1, f: r => fmt(r.g, 1) }], Object.values(byItem)) +
+      `<h3>Packages</h3>` + table([{ h: "Tag", k: "package_label", f: r => lblLink(r.package_label) }, { h: "Item", k: "item_name" }, { h: "Harvest", k: "source_harvest_names" },
+        { h: "Shipped", k: "shipped_qty", n: 1, f: r => fmt(r.shipped_qty, 2) + " " + esc(r.shipped_uom) }, { h: "Received", k: "received_qty", n: 1, f: r => r.received_qty == null ? "" : fmt(r.received_qty, 2) + " " + esc(r.received_uom) },
+        { h: "lbs", k: "sg", n: 1, f: r => r.sg == null ? `<span class="tag a">no unit wt</span>` : fmt(r.sg / 453.592, 3) }, { h: "Lab", k: "lab_state", f: r => `<span class="tag ${tagFor(r.lab_state || "")}">${esc(r.lab_state)}</span>` }], p);
+    document.getElementById("cpy").onclick = e => { navigator.clipboard.writeText(lbsText); e.target.textContent = "Copied " + lbsText; };
+  } catch (e) { document.getElementById("mbody").innerHTML = `<div class="err">${esc(e.message)}</div>`; }
+}
+
+// ---------- Adjustments
+const A = { d: null, loaded: false };
+const acols = [
+  { h: "Date", k: "adjustment_date" }, { h: "Tag", k: "package_label", f: r => lblLink(r.package_label) }, { h: "Item", k: "item_name" }, { h: "License", k: "license" },
+  { h: "Adjustment", k: "grams", n: 1, f: r => `<b style="color:${r.grams < 0 ? "var(--red)" : "var(--grn)"}">${fmt(r.grams, 1)}g</b>` },
+  { h: "% of pkg", k: "pct_of_package", n: 1, f: r => r.pct_of_package == null ? "" : fmt(r.pct_of_package, 1) + "%" },
+  { h: "Reason", k: "reason" }, { h: "Note", k: "note" }, { h: "User", k: "adjusted_by" },
+  { h: "Why flagged", f: r => (r.flag_size ? `<span class="tag f">≥1,000g</span> ` : "") + (r.flag_pct ? `<span class="tag a">≥10%</span>` : "") },
+];
+function renderAdj() {
+  const d = A.d, el = document.getElementById("atable");
+  document.getElementById("asum").innerHTML = `<div style="margin-bottom:8px"><span class="stat"><b>${d.total}</b> adjustments</span><span class="stat"><b>${fmt(d.net_g, 1)}g</b> net</span><span class="stat"><b>${d.flagged.length}</b> flagged</span></div>`;
+  el.innerHTML = table(acols, d.flagged); sortable(el, acols, d.flagged, renderAdj);
+  document.getElementById("auser").innerHTML = table([{ h: "User", k: "user" }, { h: "Adjustments", k: "count", n: 1 }, { h: "Net g", k: "net_g", n: 1, f: r => fmt(r.net_g, 1) }, { h: "Flagged", k: "flagged", n: 1 }], d.by_user);
+}
+async function loadAdj() {
+  A.loaded = true; document.getElementById("atable").textContent = "Loading…";
+  try { A.d = await feed("adjustments " + document.getElementById("adays").value); renderAdj(); }
+  catch (e) { document.getElementById("atable").innerHTML = `<div class="err">${esc(e.message)}</div>`; }
+}
+document.getElementById("adays").onchange = loadAdj;
+
+// ---------- Package detail
+document.getElementById("pgo").onclick = () => openPkg(document.getElementById("plabel").value.trim());
+document.getElementById("plabel").onkeydown = e => { if (e.key === "Enter") openPkg(e.target.value.trim()); };
+async function openPkg(label) {
+  if (!label) return;
+  const d = document.getElementById("drawer"); d.classList.add("on");
+  d.innerHTML = `<span class="x" onclick="this.parentNode.classList.remove('on')">✕</span><h2 class="lbl">${esc(label)}</h2><div id="pbody">Loading…</div>`;
+  try {
+    const r = await feed("package " + label.replace(/[^A-Za-z0-9]/g, "").toUpperCase());
+    if (r.error) { document.getElementById("pbody").innerHTML = `<div class="err">${esc(r.error)}</div>`; return; }
+    const p = r.package, orig = Number(p.OriginalPackageQuantity);
+    const adjNet = r.adjustments.reduce((a, x) => a + (Number(x.grams) || 0), 0);
+    const parentsOrig = r.parents.filter(x => (x.uom || "").toLowerCase() === "g").reduce((a, x) => a + Number(x.OriginalPackageQuantity || 0), 0);
+    const childOrig = r.children.filter(x => (x.uom || "").toLowerCase() === "g").reduce((a, x) => a + Number(x.OriginalPackageQuantity || 0), 0);
+    const docs = [...new Set(r.lab_results.map(x => x.document_file_id).filter(Boolean))];
+    const kv = [["Item", p.item_name], ["Category", p.category], ["License", p.license], ["Status", p.status + (p.is_on_hold ? " · ON HOLD" : "") + (p.is_finished ? ` · finished ${p.finished_date}` : "")],
+      ["Current qty", fmt(p.quantity, 2) + " " + p.uom], ["Original qty", fmt(orig, 2) + " " + p.uom], ["Net adjustments", fmt(adjNet, 1) + "g" + (orig && p.uom === "g" ? ` (${fmt(100 * adjNet / orig, 2)}% of original)` : "")],
+      ["Lab status", `${p.lab_state} (${p.lab_state_date || "—"})`], ["Packaged", p.packaged_date], ["Location", p.location], ["Harvest(s)", p.source_harvest_names],
+      ["Production batch", p.production_batch || p.source_production_batches], ["Received from", p.received_from ? `${p.received_from} · manifest ${p.received_manifest}` : ""], ["Note", p.Note]];
+    let ratio = "";
+    if (parentsOrig && orig && p.uom === "g") ratio += `<div class="stat">This package = <b>${fmt(100 * orig / parentsOrig, 2)}%</b> of its source packages' original weight (${g(orig)} from ${g(parentsOrig)})</div>`;
+    if (childOrig && orig && p.uom === "g") ratio += `<div class="stat">Packages made from this one: <b>${g(childOrig)}</b> = ${fmt(100 * childOrig / orig, 2)}% of its original weight</div>`;
+    document.getElementById("pbody").innerHTML =
+      `<div class="kv">${kv.map(([k, v]) => `<div>${esc(k)}</div><div>${esc(v ?? "")}</div>`).join("")}</div>${ratio}` +
+      (docs.length ? `<div style="margin:8px 0">${docs.map(x => `<button class="b" data-coa="${x}">Open COA ${x}</button>`).join(" ")}</div>` : "") +
+      `<h3>Source packages (${r.parents.length})</h3>` + table([{ h: "Tag", k: "label", f: x => lblLink(x.label) }, { h: "Item", k: "item_name" }, { h: "Original", n: 1, f: x => fmt(x.OriginalPackageQuantity, 2) + " " + esc(x.uom) }, { h: "Now", n: 1, f: x => fmt(x.quantity, 2) + " " + esc(x.uom) }, { h: "Status", k: "status" }], r.parents) +
+      `<h3>Made from this package (${r.children.length})</h3>` + table([{ h: "Tag", k: "label", f: x => lblLink(x.label) }, { h: "Item", k: "item_name" }, { h: "Packaged", k: "packaged_date" }, { h: "Original", n: 1, f: x => fmt(x.OriginalPackageQuantity, 2) + " " + esc(x.uom) }, { h: "Status", k: "status" }], r.children) +
+      `<h3>Adjustments (${r.adjustments.length})</h3>` + table([{ h: "Date", k: "adjustment_date" }, { h: "g", n: 1, f: x => fmt(x.grams, 2) }, { h: "Reason", k: "reason" }, { h: "Note", k: "note" }, { h: "User", k: "adjusted_by" }], r.adjustments) +
+      `<h3>Lab results (${r.lab_results.length})</h3>` + table([{ h: "Panel", k: "batch_name" }, { h: "Test", k: "test_type" }, { h: "Result", n: 1, f: x => fmt(x.result_level, 3) }, { h: "Pass", f: x => x.test_passed ? `<span class="tag p">pass</span>` : `<span class="tag f">fail</span>` }, { h: "Comment", k: "test_comment" }, { h: "Lab", k: "lab_name" }], r.lab_results);
+  } catch (e) { document.getElementById("pbody").innerHTML = `<div class="err">${esc(e.message)}</div>`; }
+}
+</script>
+</body></html>
