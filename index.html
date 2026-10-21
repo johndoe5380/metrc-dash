@@ -22,7 +22,7 @@ h2{font-size:18px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
 .kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin:10px 0 16px}
 .kpi{border:1px solid var(--g3);background:rgba(255,255,255,.9);padding:10px 14px}.kpi[data-go],.kpi[data-b],#eombody .kpis .kpi{cursor:pointer}.kpi:hover{border-color:var(--k)}
 .kpi b{display:block;font-size:28px;font-weight:700;line-height:1.1}.kpi span{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#444}
-.kpi.dark{background:var(--k);color:#fff;border-color:var(--k)}.kpi.dark span{color:#ddd}
+.kpi.dark{background:var(--k);color:#fff;border-color:var(--k)}.kpi.dark span{color:#ddd}.kpi.lead{border:2px solid var(--k)}
 .tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0 10px}
 input,select{font:500 14px "Barlow Semi Condensed",sans-serif;padding:6px 9px;border:1px solid var(--g3);background:#fff;color:var(--k)}input:focus,select:focus{outline:2px solid var(--k);outline-offset:-1px}
 button.b{font:600 13px "Barlow Semi Condensed",sans-serif;letter-spacing:.06em;text-transform:uppercase;padding:6px 12px;border:1px solid var(--k);background:#fff;color:var(--k);cursor:pointer}
@@ -144,7 +144,7 @@ loaders.home = async () => { try {
   const h = await api("home");
   const k = [["Active packages", fmt(h.active_packages), "inv", 1], ["Awaiting results", h.awaiting, "testing"], ["Failed tests (active)", h.failed, "testing"], ["Results back · 14d", h.returned_14d, "testing"],
     ["Unreceived manifests", h.unreceived, "xfer"], ["Flagged adj. · 7d", h.big_adj_7d, "adj"], ["N1 app mismatches", h.audit_issues, "audit"], ["On hold", h.on_hold, "inv"]];
-  $("hk").innerHTML = k.map(([t, v, go, dark]) => `<div class="kpi ${dark ? "dark" : ""}" data-go="${go}"><b>${esc(v)}</b><span>${t}</span></div>`).join("");
+  $("hk").innerHTML = k.map(([t, v, go, dark]) => `<div class="kpi ${dark ? "lead" : ""}" data-go="${go}"><b>${esc(v)}</b><span>${t}</span></div>`).join("");
   $("hk").querySelectorAll(".kpi").forEach(d => d.onclick = () => show(d.dataset.go));
   grid("hprod", [{ h: "Category", k: "category" }, { h: "Pkgs", k: "pkgs", n: 1 }, { h: "Grams", k: "g", n: 1, f: r => fmt(r.g) }, { h: "Lbs", k: "g", n: 1, f: r => lb(r.g) }, { h: "Units", k: "units", n: 1, f: r => fmt(r.units) }], h.production_7d);
   grid("hadj", [{ h: "Date", k: "adjustment_date" }, { h: "Tag", k: "package_label", f: r => lblLink(r.package_label) }, { h: "Item", k: "item_name" }, { h: "g", k: "grams", n: 1, f: r => `<span class="${r.grams < 0 ? "neg" : ""}">${fmt(r.grams, 1)}</span>` }, { h: "User", k: "adjusted_by" }], h.recent_adj);
@@ -350,7 +350,7 @@ function renderEx() {
   const by = {}; inP.forEach(r => { by[r.status] = (by[r.status] || 0) + 1; });
   $("exsum").innerHTML =
     (stops.length ? `<div class="err" style="margin-bottom:8px">⚠ ${stops.length} line(s) need a rule before filing — see STOP rows below.</div>` : "") +
-    `<div class="kpis"><div class="kpi dark"><b>$${fmt(base, 2)}</b><span>Tax base</span></div><div class="kpi"><b>$${fmt(co, 2)}</b><span>Colorado 15%</span></div><div class="kpi"><b>$${fmt(pu, 2)}</b><span>Pueblo County 5%</span></div>
+    `<div class="kpis"><div class="kpi lead"><b>$${fmt(base, 2)}</b><span>Tax base</span></div><div class="kpi"><b>$${fmt(co, 2)}</b><span>Colorado 15%</span></div><div class="kpi"><b>$${fmt(pu, 2)}</b><span>Pueblo County 5%</span></div>
      <div class="kpi"><b>$${fmt(sum(con, "taxable_value"), 2)}</b><span>Contract value · ${con.length} lines</span></div><div class="kpi"><b>$${fmt(sum(amr, "taxable_value"), 2)}</b><span>AMR value · ${amr.length} lines</span></div>
      <div class="kpi"><b>${tax.length}</b><span>Taxable lines · ${new Set(tax.map(r => r.manifest_number)).size} manifests</span></div></div>
      <div class="grid2"><div><h3>Population reconciliation · ${esc(perLbl)}</h3><div id="exrec"></div></div><div><h3>Shipped, not yet received (boundary check)</h3><div id="expend"></div></div></div>`;
@@ -397,7 +397,7 @@ loaders.eom = async () => { $("eombody").textContent = "Loading…"; try {
   const tg = d.packages.reduce((a, r) => a + (+r.grams || 0), 0), tp = d.plants.reduce((a, r) => a + (+r.count || 0), 0);
   $("eombody").innerHTML = `<div class="note">${d.method === "snapshot" ? `<span class="tag ok">Snapshot</span> taken automatically ${new Date(d.taken_at).toLocaleString()} — exact METRC inventory at month end.` :
       `<span class="tag warn">Reconstructed</span> from METRC history: plant stages from planted / flowering / harvest / destroy dates; package weights wound back from today using adjustments, new packages and transfers after month end. Immature plant-batch counts use current counts and are approximate. From the first snapshot onward every month is captured exactly on the 1st.`}</div>
-    <div class="kpis"><div class="kpi dark"><b>${fmt(tp)}</b><span>Plants · ${esc(EOM.lic)}</span></div><div class="kpi"><b>${fmt(d.packages.reduce((a, r) => a + (+r.packages || 0), 0))}</b><span>Packages</span></div><div class="kpi"><b>${fmt(tg / 453.59237, 2)}</b><span>Lbs in packages</span></div></div>
+    <div class="kpis"><div class="kpi lead"><b>${fmt(tp)}</b><span>Plants · ${esc(EOM.lic)}</span></div><div class="kpi"><b>${fmt(d.packages.reduce((a, r) => a + (+r.packages || 0), 0))}</b><span>Packages</span></div><div class="kpi"><b>${fmt(tg / 453.59237, 2)}</b><span>Lbs in packages</span></div></div>
     <div class="grid2"><div><h3>Plant count by stage <span class="muted" style="text-transform:none;letter-spacing:0;font-weight:500">· click a stage</span></h3><div id="eomp"></div></div><div><h3>Package weight by type <span class="muted" style="text-transform:none;letter-spacing:0;font-weight:500">· click a type</span></h3><div id="eomk"></div></div></div>
     <h3>Package detail</h3><div id="eomd"></div>`;
   grid("eomp", [{ h: "Stage", k: "stage", f: r => `<b>${esc(r.stage)}</b>` }, { h: "Plants", k: "count", n: 1, f: r => fmt(r.count) }, { h: "", f: () => `<span class="muted">by strain ›</span>` }], d.plants, { click: r => eomStage(r.stage) });
@@ -441,7 +441,7 @@ async function openManifestById(tid) {
       : [["Direction", "Incoming"], ["From", `${h.shipper_name || ""} (${h.shipper_license || ""})`], ["To (license)", h.license], ["Type", h.shipment_type], ["Invoice #", h.invoice_number],
         ["Created", (h.created_at || "").replace("T", " ").slice(0, 16)], ["Received", h.received_at ? h.received_at.replace("T", " ").slice(0, 16) : "not yet received"], ["Packages", P.length]];
     $("mfb").innerHTML = `<div class="kv">${kv.map(([k, v]) => `<div>${esc(k)}</div><div>${esc(v ?? "")}</div>`).join("")}</div>
-      <div class="kpis"><div class="kpi dark"><b>${fmt(g / 453.59237, 3)}</b><span>lbs (received, else shipped)</span></div><div class="kpi"><b>${fmt(g, 1)}</b><span>grams</span></div>${out ? `<div class="kpi"><b>$${fmt(price, 2)}</b><span>Shipper $ total</span></div>` : ""}<div class="kpi"><b>${P.length}</b><span>packages</span></div></div>
+      <div class="kpis"><div class="kpi lead"><b>${fmt(g / 453.59237, 3)}</b><span>lbs (received, else shipped)</span></div><div class="kpi"><b>${fmt(g, 1)}</b><span>grams</span></div>${out ? `<div class="kpi"><b>$${fmt(price, 2)}</b><span>Shipper $ total</span></div>` : ""}<div class="kpi"><b>${P.length}</b><span>packages</span></div></div>
       <div class="tools"><button class="b" id="mfv">View PDF</button><button class="b" id="mfd">Download PDF</button><button class="b" id="mfc">Download CSV</button><button class="b" id="mfl">Copy lbs</button></div>
       <h3>By item</h3><div id="mfi"></div><h3>Packages</h3><div id="mfp"></div>`;
     const by = {}; P.forEach(r => { const k = r.item_name; by[k] = by[k] || { item: k, cat: r.category, n: 0, g: 0, $: 0 }; by[k].n++; by[k].g += +r.grams || 0; by[k].$ += +r.shipper_price || 0; });
@@ -495,7 +495,7 @@ function eomStage(stage) {
   const rows = plantsIn(stage), by = {};
   rows.forEach(p => { const k = p.strain || "(no strain)"; by[k] = by[k] || { strain: k, plants: 0, tags: 0, stages: {} }; by[k].plants += +p.count || 0; by[k].tags++; by[k].stages[p.stage] = (by[k].stages[p.stage] || 0) + (+p.count || 0); });
   const list = Object.values(by).sort((a, b) => b.plants - a.plants), total = list.reduce((a, r) => a + r.plants, 0);
-  eomDrawer(`Plants · ${stage || "all stages"}`, eomSub(), `<div class="kpis"><div class="kpi dark"><b>${fmt(total)}</b><span>plants</span></div><div class="kpi"><b>${list.length}</b><span>strains</span></div></div>
+  eomDrawer(`Plants · ${stage || "all stages"}`, eomSub(), `<div class="kpis"><div class="kpi lead"><b>${fmt(total)}</b><span>plants</span></div><div class="kpi"><b>${list.length}</b><span>strains</span></div></div>
     <div class="tools"><button class="b" id="eomscsv">Download strain CSV</button><span class="muted">Click a strain for its tags</span></div><div id="eoms"></div>`);
   const stages = [...new Set(rows.map(p => p.stage))].sort();
   grid("eoms", [{ h: "Strain", k: "strain", f: r => `<b>${esc(r.strain)}</b>` }, { h: "Plants", k: "plants", n: 1, f: r => fmt(r.plants) }, { h: "Tags / batches", k: "tags", n: 1 },
@@ -504,7 +504,7 @@ function eomStage(stage) {
 }
 function eomStrain(stage, strain) {
   const rows = plantsIn(stage, strain);
-  eomDrawer(strain, `${stage || "all stages"} · ${eomSub()}`, `<div class="kpis"><div class="kpi dark"><b>${fmt(rows.reduce((a, p) => a + (+p.count || 0), 0))}</b><span>plants</span></div><div class="kpi"><b>${rows.length}</b><span>tags / batches</span></div></div>
+  eomDrawer(strain, `${stage || "all stages"} · ${eomSub()}`, `<div class="kpis"><div class="kpi lead"><b>${fmt(rows.reduce((a, p) => a + (+p.count || 0), 0))}</b><span>plants</span></div><div class="kpi"><b>${rows.length}</b><span>tags / batches</span></div></div>
     <div class="tools"><button class="b" id="eomtcsv">Download tag CSV</button><span class="muted">Click a tag for its plant record</span></div><div id="eomt"></div>`, () => eomStage(stage));
   grid("eomt", [{ h: "Tag / batch", k: "label", f: r => `<span class="lbl">${esc(r.label)}</span>` }, { h: "Stage", k: "stage" }, { h: "Plants", k: "count", n: 1 }, { h: "Planted", k: "planted" }, { h: "Flowering", k: "flowering" },
     { h: "Location", k: "location" }, { h: "Plant batch", k: "batch" }], rows, { click: r => eomPlant(r, stage, strain) });
@@ -516,7 +516,7 @@ function eomPlant(p, stage, strain) {
 }
 function eomCat(cat) {
   const rows = (EOM.package_detail || []).filter(p => !cat || p.category === cat), g = rows.reduce((a, r) => a + (+r.grams || 0), 0);
-  eomDrawer(`Packages · ${cat || "all types"}`, eomSub(), `<div class="kpis"><div class="kpi dark"><b>${rows.length}</b><span>packages</span></div><div class="kpi"><b>${fmt(g, 1)}</b><span>grams</span></div><div class="kpi"><b>${fmt(g / 453.59237, 3)}</b><span>lbs</span></div></div>
+  eomDrawer(`Packages · ${cat || "all types"}`, eomSub(), `<div class="kpis"><div class="kpi lead"><b>${rows.length}</b><span>packages</span></div><div class="kpi"><b>${fmt(g, 1)}</b><span>grams</span></div><div class="kpi"><b>${fmt(g / 453.59237, 3)}</b><span>lbs</span></div></div>
     <div class="tools"><button class="b" id="eomkcsv">Download CSV</button><span class="muted">Click a tag for full package detail</span></div><div id="eomkp"></div>`);
   grid("eomkp", [{ h: "Tag", k: "label", f: r => lblLink(r.label) }, { h: "Item", k: "item_name" }, { h: "Type", k: "category" }, { h: "Qty", k: "qty", n: 1, f: r => fmt(r.qty, 2) + " " + esc(r.uom) }, { h: "Grams", k: "grams", n: 1, f: r => fmt(r.grams, 2) }, { h: "Lbs", k: "grams", n: 1, f: r => fmt(r.grams / 453.59237, 4) }], rows);
   $("eomkcsv").onclick = () => download(`Packages_${(cat || "all").replace(/\W+/g, "_")}_${EOM.lic}_${$("eommon").value}.csv`, toCSV(rows, [["Tag", "label"], ["Item", "item_name"], ["Type", "category"], ["Qty", "qty"], ["UoM", "uom"], ["Grams", "grams"], ["Lbs", r => r.grams == null ? "" : (r.grams / 453.59237).toFixed(4)]]));
