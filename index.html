@@ -20,7 +20,7 @@ main{position:relative;z-index:1;padding:18px 22px 60px}.tab{display:none}.tab.o
 h2{font-size:18px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin:0 0 4px}h3{font-size:14px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin:18px 0 6px}
 .note{color:#555;font-size:12.5px;margin:2px 0 12px;max-width:1000px}
 .kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin:10px 0 16px}
-.kpi{border:1px solid var(--g3);background:rgba(255,255,255,.9);padding:10px 14px;cursor:pointer}.kpi:hover{border-color:var(--k)}
+.kpi{border:1px solid var(--g3);background:rgba(255,255,255,.9);padding:10px 14px}.kpi[data-go],.kpi[data-b],#eombody .kpis .kpi{cursor:pointer}.kpi:hover{border-color:var(--k)}
 .kpi b{display:block;font-size:28px;font-weight:700;line-height:1.1}.kpi span{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#444}
 .kpi.dark{background:var(--k);color:#fff;border-color:var(--k)}.kpi.dark span{color:#ddd}
 .tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0 10px}
@@ -382,10 +382,11 @@ loaders.eom = async () => { $("eombody").textContent = "Loading…"; try {
   $("eombody").innerHTML = `<div class="note">${d.method === "snapshot" ? `<span class="tag ok">Snapshot</span> taken automatically ${new Date(d.taken_at).toLocaleString()} — exact METRC inventory at month end.` :
       `<span class="tag warn">Reconstructed</span> from METRC history: plant stages from planted / flowering / harvest / destroy dates; package weights wound back from today using adjustments, new packages and transfers after month end. Immature plant-batch counts use current counts and are approximate. From the first snapshot onward every month is captured exactly on the 1st.`}</div>
     <div class="kpis"><div class="kpi dark"><b>${fmt(tp)}</b><span>Plants · ${esc(EOM.lic)}</span></div><div class="kpi"><b>${fmt(d.packages.reduce((a, r) => a + (+r.packages || 0), 0))}</b><span>Packages</span></div><div class="kpi"><b>${fmt(tg / 453.59237, 2)}</b><span>Lbs in packages</span></div></div>
-    <div class="grid2"><div><h3>Plant count by stage</h3><div id="eomp"></div></div><div><h3>Package weight by type</h3><div id="eomk"></div></div></div>
+    <div class="grid2"><div><h3>Plant count by stage <span class="muted" style="text-transform:none;letter-spacing:0;font-weight:500">· click a stage</span></h3><div id="eomp"></div></div><div><h3>Package weight by type <span class="muted" style="text-transform:none;letter-spacing:0;font-weight:500">· click a type</span></h3><div id="eomk"></div></div></div>
     <h3>Package detail</h3><div id="eomd"></div>`;
-  grid("eomp", [{ h: "Stage", k: "stage" }, { h: "Plants", k: "count", n: 1, f: r => fmt(r.count) }], d.plants);
-  grid("eomk", [{ h: "Package type", k: "category" }, { h: "Packages", k: "packages", n: 1 }, { h: "Grams", k: "grams", n: 1, f: r => fmt(r.grams, 2) }, { h: "Lbs", k: "lbs", n: 1, f: r => fmt(r.lbs, 4) }], d.packages);
+  grid("eomp", [{ h: "Stage", k: "stage", f: r => `<b>${esc(r.stage)}</b>` }, { h: "Plants", k: "count", n: 1, f: r => fmt(r.count) }, { h: "", f: () => `<span class="muted">by strain ›</span>` }], d.plants, { click: r => eomStage(r.stage) });
+  grid("eomk", [{ h: "Package type", k: "category", f: r => `<b>${esc(r.category)}</b>` }, { h: "Packages", k: "packages", n: 1 }, { h: "Grams", k: "grams", n: 1, f: r => fmt(r.grams, 2) }, { h: "Lbs", k: "lbs", n: 1, f: r => fmt(r.lbs, 4) }, { h: "", f: () => `<span class="muted">packages ›</span>` }], d.packages, { click: r => eomCat(r.category) });
+  const ks = $("eombody").querySelectorAll(".kpis .kpi"); if (ks[0]) ks[0].onclick = () => eomStage(null); if (ks[1]) ks[1].onclick = () => eomCat(null); if (ks[2]) ks[2].onclick = () => eomCat(null);
   grid("eomd", [{ h: "Tag", k: "label", f: r => lblLink(r.label) }, { h: "Type", k: "category" }, { h: "Item", k: "item_name" }, { h: "Qty", k: "qty", n: 1, f: r => fmt(r.qty, 2) + " " + esc(r.uom) }, { h: "Grams", k: "grams", n: 1, f: r => fmt(r.grams, 2) }], d.package_detail, { h: "50vh" });
 } catch (e) { fail("eombody", e); } };
 $("eomlic").onchange = loaders.eom; $("eommon").onchange = loaders.eom;
@@ -464,6 +465,46 @@ $("ogo").onclick = loaders.out; $("olic").onchange = loaders.out; $("oq").oninpu
 $("ocsv").onclick = () => download(`Outgoing_Manifests_${$("ofrom").value}_${$("oto").value}.csv`, toCSV(OUT.view || [], [["Manifest", "manifest_number"], ["From license", "license"], ["To", "recipient_name"], ["To license", "recipient_license"], ["Destination type", "destination_type"],
   ["Type", "shipment_type"], ["Transaction", "transaction_type"], ["Invoice", "invoice_number"], ["Created", "created_at"], ["Received", "received_at"], ["Packages", "pkgs_loaded"], ["Lbs shipped", "shipped_lb"], ["Lbs received", "received_lb"], ["Units", "shipped_units"],
   ["Shipper $", "shipper_total"], ["Receiver $", "receiver_total"], ["Rejected pkgs", "rejected_pkgs"], ["Categories", "categories"]]));
+
+// ---------- MONTH-END drill-down: stage -> strain -> tags -> plant; package type -> packages
+function eomDrawer(title, sub, html, back) {
+  const dr = $("drawer"); dr.classList.add("on");
+  dr.innerHTML = `<span class="x" onclick="this.parentNode.classList.remove('on')">✕</span>${back ? `<button class="b" id="eomback" style="margin-bottom:8px">← Back</button>` : ""}<h2>${esc(title)}</h2><div class="muted">${esc(sub)}</div>${html}`;
+  if (back) $("eomback").onclick = back;
+}
+const eomSub = () => `${EOM.lic} · month end ${$("eommon").value} · ${EOM.method}`;
+const plantsIn = (stage, strain) => (EOM.plant_detail || []).filter(p => (!stage || p.stage === stage) && (strain == null || (p.strain || "(no strain)") === strain));
+
+function eomStage(stage) {
+  const rows = plantsIn(stage), by = {};
+  rows.forEach(p => { const k = p.strain || "(no strain)"; by[k] = by[k] || { strain: k, plants: 0, tags: 0, stages: {} }; by[k].plants += +p.count || 0; by[k].tags++; by[k].stages[p.stage] = (by[k].stages[p.stage] || 0) + (+p.count || 0); });
+  const list = Object.values(by).sort((a, b) => b.plants - a.plants), total = list.reduce((a, r) => a + r.plants, 0);
+  eomDrawer(`Plants · ${stage || "all stages"}`, eomSub(), `<div class="kpis"><div class="kpi dark"><b>${fmt(total)}</b><span>plants</span></div><div class="kpi"><b>${list.length}</b><span>strains</span></div></div>
+    <div class="tools"><button class="b" id="eomscsv">Download strain CSV</button><span class="muted">Click a strain for its tags</span></div><div id="eoms"></div>`);
+  const stages = [...new Set(rows.map(p => p.stage))].sort();
+  grid("eoms", [{ h: "Strain", k: "strain", f: r => `<b>${esc(r.strain)}</b>` }, { h: "Plants", k: "plants", n: 1, f: r => fmt(r.plants) }, { h: "Tags / batches", k: "tags", n: 1 },
+    ...(stage ? [] : stages.map(s => ({ h: s, n: 1, f: r => fmt(r.stages[s] || "") })))], list, { click: r => eomStrain(stage, r.strain) });
+  $("eomscsv").onclick = () => download(`Plants_by_strain_${EOM.lic}_${$("eommon").value}${stage ? "_" + stage.replace(/\W+/g, "") : ""}.csv`, toCSV(list, [["Strain", "strain"], ["Plants", "plants"], ["Tags/batches", "tags"], ...stages.map(s => [s, r => r.stages[s] || 0])]));
+}
+function eomStrain(stage, strain) {
+  const rows = plantsIn(stage, strain);
+  eomDrawer(strain, `${stage || "all stages"} · ${eomSub()}`, `<div class="kpis"><div class="kpi dark"><b>${fmt(rows.reduce((a, p) => a + (+p.count || 0), 0))}</b><span>plants</span></div><div class="kpi"><b>${rows.length}</b><span>tags / batches</span></div></div>
+    <div class="tools"><button class="b" id="eomtcsv">Download tag CSV</button><span class="muted">Click a tag for its plant record</span></div><div id="eomt"></div>`, () => eomStage(stage));
+  grid("eomt", [{ h: "Tag / batch", k: "label", f: r => `<span class="lbl">${esc(r.label)}</span>` }, { h: "Stage", k: "stage" }, { h: "Plants", k: "count", n: 1 }, { h: "Planted", k: "planted" }, { h: "Flowering", k: "flowering" },
+    { h: "Location", k: "location" }, { h: "Plant batch", k: "batch" }], rows, { click: r => eomPlant(r, stage, strain) });
+  $("eomtcsv").onclick = () => download(`Plant_tags_${strain.replace(/\W+/g, "_")}_${EOM.lic}_${$("eommon").value}.csv`, toCSV(rows, [["Tag/batch", "label"], ["Strain", "strain"], ["Stage", "stage"], ["Plants", "count"], ["Planted", "planted"], ["Flowering", "flowering"], ["Harvested", "harvested"], ["Destroyed", "destroyed"], ["Location", "location"], ["Plant batch", "batch"]]));
+}
+function eomPlant(p, stage, strain) {
+  const kv = [["Tag / batch", p.label], ["Strain", p.strain], ["Stage at month end", p.stage], ["Plants", p.count], ["Planted", p.planted], ["Flowering", p.flowering], ["Harvested", p.harvested || "—"], ["Destroyed", p.destroyed || "—"], ["Location", p.location], ["Plant batch", p.batch]];
+  eomDrawer(p.label, eomSub(), `<div class="kv">${kv.map(([k, v]) => `<div>${esc(k)}</div><div class="${k === "Tag / batch" ? "lbl" : ""}">${esc(v ?? "")}</div>`).join("")}</div>`, () => eomStrain(stage, strain));
+}
+function eomCat(cat) {
+  const rows = (EOM.package_detail || []).filter(p => !cat || p.category === cat), g = rows.reduce((a, r) => a + (+r.grams || 0), 0);
+  eomDrawer(`Packages · ${cat || "all types"}`, eomSub(), `<div class="kpis"><div class="kpi dark"><b>${rows.length}</b><span>packages</span></div><div class="kpi"><b>${fmt(g, 1)}</b><span>grams</span></div><div class="kpi"><b>${fmt(g / 453.59237, 3)}</b><span>lbs</span></div></div>
+    <div class="tools"><button class="b" id="eomkcsv">Download CSV</button><span class="muted">Click a tag for full package detail</span></div><div id="eomkp"></div>`);
+  grid("eomkp", [{ h: "Tag", k: "label", f: r => lblLink(r.label) }, { h: "Item", k: "item_name" }, { h: "Type", k: "category" }, { h: "Qty", k: "qty", n: 1, f: r => fmt(r.qty, 2) + " " + esc(r.uom) }, { h: "Grams", k: "grams", n: 1, f: r => fmt(r.grams, 2) }, { h: "Lbs", k: "grams", n: 1, f: r => fmt(r.grams / 453.59237, 4) }], rows);
+  $("eomkcsv").onclick = () => download(`Packages_${(cat || "all").replace(/\W+/g, "_")}_${EOM.lic}_${$("eommon").value}.csv`, toCSV(rows, [["Tag", "label"], ["Item", "item_name"], ["Type", "category"], ["Qty", "qty"], ["UoM", "uom"], ["Grams", "grams"], ["Lbs", r => r.grams == null ? "" : (r.grams / 453.59237).toFixed(4)]]));
+}
 
 // ---------- package lookup typeahead
 let lkT, lkSeq = 0, lkSel = -1, lkRows = [];
