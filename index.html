@@ -82,7 +82,7 @@ footer{position:relative;z-index:1;text-align:center;font-weight:500;font-size:1
 <section id="audit" class="tab"><h2>N1 App vs METRC</h2><div class="note" id="anote"></div><div class="tools"><select id="asrc"><option value="">All sources</option><option>concentrate</option><option>vape</option><option>flower</option></select><select id="afind"><option value="">All findings</option></select><input id="aq" placeholder="Name, tag, batch…"></div><div id="audsum"></div><div id="audtable"></div></section>
 
 <section id="excise" class="tab"><h2>Excise Tax · 403R-00713</h2><div class="note">Outbound transfers from 403R-00713, assigned to the month they were <b>received</b>, calculated per <i>Next1 Labs — Monthly Marijuana Excise Tax Calculation</i>: Colorado 15% · Pueblo County 5%; contract price (Shipper Dollar Amount) for unaffiliated, AMR × received lbs for affiliated; extraction rate on AMR transfers to a Retail MIP (flagged); rejected/returned and unreceived excluded and flagged; unknown values stop. Each line rounded to cents. Destination type comes from the destination license prefix.</div>
-<div class="tools"><select id="exper"></select><label title="Lines table and line CSV show every month; totals stay on the selected month"><input type="checkbox" id="exall"> show all periods in the lines table / CSV</label><button class="b" id="excsv">Download line CSV</button><button class="b" id="exsumcsv">Download summary CSV</button></div>
+<div class="tools"><select id="exper"></select><label title="Totals, reconciliation, lines and both CSVs cover every month, with a by-month table"><input type="checkbox" id="exall"> show all periods</label><button class="b" id="excsv">Download line CSV</button><button class="b" id="exsumcsv">Download summary CSV</button></div>
 <div id="exsum"></div><div class="note" id="exrates"></div><h3>Lines</h3><div id="extable"></div></section>
 <section id="eom" class="tab"><h2>Month-End Inventory · 403 licenses</h2><div class="tools"><select id="eomlic"><option>403R-00713</option><option>403-01881</option></select><select id="eommon"></select><button class="b" id="eomcsv">Download summary CSV</button><button class="b" id="eomdcsv">Download detail CSV</button></div><div id="eombody"></div></section>
 </main>
@@ -341,7 +341,8 @@ loaders.excise = async (period) => { $("extable").textContent = "Loading…"; tr
   renderEx();
 } catch (e) { fail("extable", e); } };
 function renderEx() {
-  const per = $("exper").value, R = EX.rows, inP = R.filter(r => r.period === per);
+  const ALL = $("exall").checked && EX.all, per = $("exper").value, R = ALL ? EX.all : EX.rows;
+  const inP = ALL ? R.filter(r => r.period) : R.filter(r => r.period === per), perLbl = ALL ? "all periods" : per;
   const sum = (a, k) => a.reduce((s, r) => s + (+r[k] || 0), 0);
   const tax = inP.filter(r => r.status === "Taxable"), amr = tax.filter(r => r.method === "AMR"), con = tax.filter(r => r.method === "Contract price");
   const stops = inP.filter(r => /^STOP/.test(r.status)), pending = R.filter(r => !r.received_date && !r.voided);
@@ -352,8 +353,17 @@ function renderEx() {
     `<div class="kpis"><div class="kpi dark"><b>$${fmt(base, 2)}</b><span>Tax base</span></div><div class="kpi"><b>$${fmt(co, 2)}</b><span>Colorado 15%</span></div><div class="kpi"><b>$${fmt(pu, 2)}</b><span>Pueblo County 5%</span></div>
      <div class="kpi"><b>$${fmt(sum(con, "taxable_value"), 2)}</b><span>Contract value · ${con.length} lines</span></div><div class="kpi"><b>$${fmt(sum(amr, "taxable_value"), 2)}</b><span>AMR value · ${amr.length} lines</span></div>
      <div class="kpi"><b>${tax.length}</b><span>Taxable lines · ${new Set(tax.map(r => r.manifest_number)).size} manifests</span></div></div>
-     <div class="grid2"><div><h3>Population reconciliation · ${esc(per)}</h3><div id="exrec"></div></div><div><h3>Shipped, not yet received (boundary check)</h3><div id="expend"></div></div></div>`;
-  grid("exrec", [{ h: "Status", k: "s" }, { h: "Lines", k: "n", n: 1 }], [...Object.entries(by).map(([s, n]) => ({ s, n })), { s: "TOTAL received in period", n: inP.length }], { h: "40vh" });
+     <div class="grid2"><div><h3>Population reconciliation · ${esc(perLbl)}</h3><div id="exrec"></div></div><div><h3>Shipped, not yet received (boundary check)</h3><div id="expend"></div></div></div>`;
+  if (ALL) {
+    const bm = {}; inP.forEach(r => { const m = bm[r.period] = bm[r.period] || { period: r.period, lines: 0, taxable: 0, contract: 0, amr: 0, base: 0, co: 0, pu: 0, stop: 0 };
+      m.lines++; if (/^STOP/.test(r.status)) m.stop++; if (r.status === "Taxable") { m.taxable++; m.base += +r.taxable_value || 0; m.co += +r.colorado_tax || 0; m.pu += +r.pueblo_tax || 0; if (r.method === "AMR") m.amr += +r.taxable_value || 0; else m.contract += +r.taxable_value || 0; } });
+    EX.byMonth = Object.values(bm).sort((a, b) => a.period.localeCompare(b.period));
+    $("exsum").insertAdjacentHTML("beforeend", `<h3>By month</h3><div id="exbm"></div>`);
+    grid("exbm", [{ h: "Month", k: "period", f: r => `<b>${esc(r.period)}</b>` }, { h: "Lines", k: "lines", n: 1 }, { h: "Taxable", k: "taxable", n: 1 }, { h: "Contract $", k: "contract", n: 1, f: r => fmt(r.contract, 2) },
+      { h: "AMR $", k: "amr", n: 1, f: r => fmt(r.amr, 2) }, { h: "Tax base", k: "base", n: 1, f: r => `<b>${fmt(r.base, 2)}</b>` }, { h: "Colorado 15%", k: "co", n: 1, f: r => fmt(r.co, 2) }, { h: "Pueblo 5%", k: "pu", n: 1, f: r => fmt(r.pu, 2) },
+      { h: "", k: "stop", f: r => r.stop ? `<span class="tag bad">${r.stop} STOP</span>` : "" }], EX.byMonth, { click: r => { $("exall").checked = false; $("exper").value = r.period; loaders.excise(r.period); } });
+  }
+  grid("exrec", [{ h: "Status", k: "s" }, { h: "Lines", k: "n", n: 1 }], [...Object.entries(by).map(([s, n]) => ({ s, n })), { s: ALL ? "TOTAL received (all periods)" : "TOTAL received in period", n: inP.length }], { h: "40vh" });
   grid("expend", [{ h: "Manifest", k: "manifest_number", f: r => mfLink(r.transfer_id, r.manifest_number) }, { h: "Created", k: "created_date" }, { h: "Destination", k: "recipient_name" }, { h: "Package", k: "package_label", f: r => lblLink(r.package_label) }], pending, { h: "40vh" });
   const rateQ = [...new Set(EX.rates.map(r => r.eff_from))];
   $("exrates").innerHTML = `AMR quarters loaded: ${rateQ.map(q => `<b>${q}</b>`).join(", ") || "none"}. Rows dated in a quarter without rates show <i>STOP: AMR rate missing</i> (only matters for AMR-valued lines).`;
@@ -362,13 +372,17 @@ function renderEx() {
     { h: "Shipper $", k: "shipper_price", n: 1, f: r => r.shipper_price == null ? "" : fmt(r.shipper_price, 2) }, { h: "Method", k: "method" }, { h: "AMR", k: "amr_rate", n: 1, f: r => r.amr_rate ? `$${fmt(r.amr_rate)}/${esc(r.amr_unit)}` : "" },
     { h: "Taxable value", k: "taxable_value", n: 1, f: r => fmt(r.taxable_value, 2) }, { h: "CO 15%", k: "colorado_tax", n: 1, f: r => fmt(r.colorado_tax, 2) }, { h: "Pueblo 5%", k: "pueblo_tax", n: 1, f: r => fmt(r.pueblo_tax, 2) },
     { h: "Status", k: "status", f: r => `<span class="tag ${r.status === "Taxable" ? "ok" : /^STOP/.test(r.status) ? "bad" : "warn"}">${esc(r.status)}</span>` }, { h: "Flags", k: "flags", f: r => r.flags ? `<span class="neg" style="font-size:12px">${esc(r.flags)}</span>` : "" }],
-    $("exall").checked ? (EX.all || R) : inP);
+    ALL ? R : inP);
 }
 $("exper").onchange = () => loaders.excise($("exper").value);
 // "show all periods": fetch every month's lines (totals/reconciliation stay on the selected month)
 $("exall").onchange = async () => { if ($("exall").checked && !EX.all) { $("extable").textContent = "Loading all periods…"; try { EX.all = (await api("excise", { period: "" })).rows; } catch (e) { return fail("extable", e); } } renderEx(); };
 $("excsv").onclick = () => download(`Excise_403R-00713_${$("exall").checked ? "all_periods" : $("exper").value}.csv`, toCSV($("exall").checked ? (EX.all || EX.rows) : EX.rows.filter(r => r.period === $("exper").value), exCols));
-$("exsumcsv").onclick = () => { const per = $("exper").value, t = EX.rows.filter(r => r.period === per && r.status === "Taxable");
+$("exsumcsv").onclick = () => { const ALL = $("exall").checked && EX.all, per = ALL ? "all_periods" : $("exper").value, t = (ALL ? EX.all : EX.rows).filter(r => (ALL ? r.period : r.period === $("exper").value) && r.status === "Taxable");
+  if (ALL) { const g = {}; t.forEach(r => { const k = r.period + "|" + r.method + "|" + (r.amr_category || ""); g[k] = g[k] || { period: r.period, method: r.method, cat: r.amr_category || "", lines: 0, lb: 0, val: 0, co: 0, pu: 0 }; const x = g[k]; x.lines++; x.lb += +r.received_lb || 0; x.val += +r.taxable_value || 0; x.co += +r.colorado_tax || 0; x.pu += +r.pueblo_tax || 0; });
+    const rows = Object.values(g).sort((a, b) => a.period.localeCompare(b.period) || a.method.localeCompare(b.method));
+    rows.push({ period: "TOTAL", method: "", cat: "", lines: t.length, lb: rows.reduce((a, r) => a + r.lb, 0), val: rows.reduce((a, r) => a + r.val, 0), co: rows.reduce((a, r) => a + r.co, 0), pu: rows.reduce((a, r) => a + r.pu, 0) });
+    return download(`Excise_Summary_403R-00713_all_periods.csv`, toCSV(rows, [["Month", "period"], ["Method", "method"], ["AMR category", "cat"], ["Lines", "lines"], ["Received lb", r => r.lb.toFixed(4)], ["Taxable value", r => r.val.toFixed(2)], ["Colorado 15%", r => r.co.toFixed(2)], ["Pueblo 5%", r => r.pu.toFixed(2)]])); }
   const g = {}; t.forEach(r => { const k = r.method + "|" + (r.amr_category || ""); g[k] = g[k] || { method: r.method, cat: r.amr_category || "", lines: 0, lb: 0, val: 0, co: 0, pu: 0 }; const x = g[k]; x.lines++; x.lb += +r.received_lb || 0; x.val += +r.taxable_value || 0; x.co += +r.colorado_tax || 0; x.pu += +r.pueblo_tax || 0; });
   const rows = Object.values(g); rows.push({ method: "TOTAL", cat: "", lines: t.length, lb: rows.reduce((a, r) => a + r.lb, 0), val: rows.reduce((a, r) => a + r.val, 0), co: rows.reduce((a, r) => a + r.co, 0), pu: rows.reduce((a, r) => a + r.pu, 0) });
   download(`Excise_Summary_403R-00713_${per}.csv`, toCSV(rows, [["Method", "method"], ["AMR category", "cat"], ["Lines", "lines"], ["Received lb", r => r.lb.toFixed(4)], ["Taxable value", r => r.val.toFixed(2)], ["Colorado 15%", r => r.co.toFixed(2)], ["Pueblo 5%", r => r.pu.toFixed(2)]])); };
