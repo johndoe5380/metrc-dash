@@ -20,7 +20,7 @@ main{position:relative;z-index:1;padding:18px 22px 60px}.tab{display:none}.tab.o
 h2{font-size:18px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin:0 0 4px}h3{font-size:14px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin:18px 0 6px}
 .note{color:#555;font-size:12.5px;margin:2px 0 12px;max-width:1000px}
 .kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin:10px 0 16px}
-.kpi{border:1px solid var(--g3);background:rgba(255,255,255,.9);padding:10px 14px}.kpi[data-go],.kpi[data-b],#eombody .kpis .kpi{cursor:pointer}.kpi:hover{border-color:var(--k)}
+.kpi{border:1px solid var(--g3);background:rgba(255,255,255,.9);padding:10px 14px}.kpi.act{cursor:pointer}.kpi.act:hover{border-color:var(--k);box-shadow:0 0 0 1px var(--k)}
 .kpi b{display:block;font-size:28px;font-weight:700;line-height:1.1}.kpi span{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#444}
 .kpi.dark{background:var(--k);color:#fff;border-color:var(--k)}.kpi.dark span{color:#ddd}.kpi.lead{border:2px solid var(--k)}
 .tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0 10px}
@@ -522,6 +522,8 @@ function eomCat(cat) {
   $("eomkcsv").onclick = () => download(`Packages_${(cat || "all").replace(/\W+/g, "_")}_${EOM.lic}_${$("eommon").value}.csv`, toCSV(rows, [["Tag", "label"], ["Item", "item_name"], ["Type", "category"], ["Qty", "qty"], ["UoM", "uom"], ["Grams", "grams"], ["Lbs", r => r.grams == null ? "" : (r.grams / 453.59237).toFixed(4)]]));
 }
 
+// ---------- only cards that do something on click get hover/pointer
+document.addEventListener("mouseover", e => { const k = e.target.closest(".kpi"); if (k && !k.classList.contains("act") && (k.onclick || k.dataset.go || k.dataset.b)) k.classList.add("act"); });
 // ---------- package lookup typeahead
 let lkT, lkSeq = 0, lkSel = -1, lkRows = [];
 function lkRender() { const s = $("sug");
