@@ -475,7 +475,7 @@ async function openManifestById(tid) {
       <h3>By item</h3><div id="mfi"></div><h3>Packages</h3><div id="mfp"></div>`;
     const by = {}; P.forEach(r => { const k = r.item_name; by[k] = by[k] || { item: k, cat: r.category, n: 0, g: 0, $: 0 }; by[k].n++; by[k].g += +r.grams || 0; by[k].$ += +r.shipper_price || 0; });
     grid("mfi", [{ h: "Item", k: "item" }, { h: "Category", k: "cat" }, { h: "Pkgs", k: "n", n: 1 }, { h: "Lbs", k: "g", n: 1, f: r => fmt(r.g / 453.59237, 3) }, { h: "Grams", k: "g", n: 1, f: r => fmt(r.g, 1) }, ...(price ? [{ h: "Shipper $", k: "$", n: 1, f: r => fmt(r.$, 2) }, { h: "$/lb", n: 1, f: r => r.$ && r.g ? fmt(r.$ / (r.g / 453.59237), 2) : "" }, { h: "$/g", n: 1, f: r => r.$ && r.g ? fmt(r.$ / r.g, 3) : "" }] : [])], Object.values(by));
-    grid("mfp", [{ h: "Tag", k: "package_label", f: r => lblLink(r.package_label) }, { h: "Item", k: "item_name" }, { h: "Category", k: "category" },
+    grid("mfp", [{ h: "Tag", k: "package_label", f: r => lblLink(r.package_label) + ` <button class="b" data-addlist="${esc(r.package_label)}" style="padding:1px 8px;font-size:11px">+ List</button>` }, { h: "Item", k: "item_name" }, { h: "Category", k: "category" },
       { h: "Shipped", k: "shipped_qty", n: 1, f: r => fmt(r.shipped_qty, 2) + " " + esc(r.shipped_uom) }, { h: "Received", k: "received_qty", n: 1, f: r => r.received_qty == null ? "" : fmt(r.received_qty, 2) + " " + esc(r.received_uom) },
       { h: "Lbs", k: "grams", n: 1, f: r => fmt(r.grams / 453.59237, 3) }, ...(price ? [{ h: "Shipper $", k: "shipper_price", n: 1, f: r => r.shipper_price == null ? "" : fmt(r.shipper_price, 2) }, { h: "Receiver $", k: "receiver_price", n: 1, f: r => r.receiver_price == null ? "" : fmt(r.receiver_price, 2) }, { h: "$/lb", n: 1, f: r => +r.shipper_price > 0 && r.grams ? fmt(r.shipper_price / (r.grams / 453.59237), 2) : "" }] : []),
       { h: "State", k: "state", f: r => `<span class="tag ${/Reject|Return/.test(r.state || "") ? "bad" : ""}">${esc(r.state)}</span>` }, { h: "Lab", k: "lab_state", f: r => `<span class="tag ${tagFor(r.lab_state)}">${esc(r.lab_state)}</span>` }, { h: "Harvest", k: "source_harvests" }], P);
@@ -565,7 +565,7 @@ function lineageHtml(L) {
     if (n.received_from) org = `<span class="org">← ${esc(n.received_from)} (${esc(n.received_license || "")}) · manifest ${mfLink(n.transfer_id, n.manifest)} · ${esc((n.received_at || "").slice(0, 10))}${n.price != null ? ` · $${fmt(n.price, 2)}${n.price_per_lb ? ` ($${fmt(n.price_per_lb, 2)}/lb)` : ""}` : ""}</span>`;
     else if (!n.has_parents) org = `<span class="org grown">origin · harvest ${esc(n.harvest || "—")}</span>`;
     const cost = n.depth > 0 && n.cost_per_lb != null && !n.received_from ? ` <span class="muted" style="font-size:12px">· biomass $${fmt(n.cost_per_lb, 2)}/lb</span>` : "";
-    return `${lblLink(n.label)} <b>${esc(n.item_name || "")}</b> <span class="muted">${esc(n.category || "")} · ${qty} · ${esc(n.packaged_date || "")} · ${esc(n.license || "")}</span>${cost}${org}`;
+    return `${lblLink(n.label)} ${metrcBtn(n.label, n.license)} <button class="b" data-addlist="${esc(n.label)}" style="padding:1px 8px;font-size:11px">+ List</button> <b>${esc(n.item_name || "")}</b> <span class="muted">${esc(n.category || "")} · ${qty} · ${esc(n.packaged_date || "")} · ${esc(n.license || "")}</span>${cost}${org}`;
   };
   const seen = new Set();
   const node = (n, d) => {
