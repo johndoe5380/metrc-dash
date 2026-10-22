@@ -44,6 +44,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 #sug{position:absolute;top:100%;right:0;width:440px;max-height:60vh;overflow:auto;background:#fff;border:2px solid var(--k);border-top:0;display:none;z-index:60}
 #sug div{padding:7px 10px;border-bottom:1px solid var(--g2);cursor:pointer}#sug div:hover,#sug div.on{background:var(--k);color:#fff}#sug small{display:block;opacity:.75}
 .tree{border:1px solid var(--g3);background:rgba(255,255,255,.94);padding:6px 10px;max-height:60vh;overflow:auto}.tree details{margin-left:18px;border-left:1px solid var(--g2);padding-left:8px}.tree>details{margin-left:0;border-left:0;padding-left:0}.tree summary{cursor:pointer;padding:3px 0;list-style:none}.tree summary::-webkit-details-marker{display:none}.tree summary:before{content:"▸ ";color:var(--g4)}.tree details[open]>summary:before{content:"▾ "}.tree .leaf:before{content:"• ";color:var(--g4)}.tree .leaf{margin-left:18px;padding:3px 0}.org{display:inline-block;margin-left:6px;font-size:12px;padding:1px 6px;border:1px solid var(--k)}.org.grown{border-color:var(--g4);color:#444}
+details.sec{border-top:1px solid var(--g2);padding:2px 0}details.sec>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;padding:8px 0}details.sec>summary::-webkit-details-marker{display:none}details.sec>summary h3{margin:0}details.sec>summary:before{content:"▸";font-size:12px;color:var(--g4)}details.sec[open]>summary:before{content:"▾"}.tl{list-style:none;margin:0;padding:0 0 0 14px;border-left:2px solid var(--k)}.tl li{position:relative;padding:5px 0 7px 10px}.tl li:before{content:"";position:absolute;left:-19px;top:10px;width:8px;height:8px;background:#fff;border:2px solid var(--k);border-radius:50%}.tl .d{font-weight:700;font-variant-numeric:tabular-nums;margin-right:8px}.tl .k{font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border:1px solid var(--g4);padding:0 6px;margin-right:6px}
 footer{position:relative;z-index:1;text-align:center;font-weight:500;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#333;padding:16px 0 26px}
 </style></head>
 <body>
@@ -328,9 +329,14 @@ async function openPkg(label) {
           ${sh.map(x => `${lblLink(x.label)} ${fmt(x.orig_g, 0)}g, also from ${esc(x.others_items || "")}`).join(" · ")}${left > shG + 1 ? ` <span class="neg">· ${fmt(left - shG, 1)}g drawn but not in any synced package</span>` : ""}${left < -1 ? ` <span class="neg">· solo packages exceed what was drawn by ${fmt(-left, 1)}g</span>` : ""}</div>`;
       }
     }
-    $("pb").innerHTML = `<div class="kv">${kv.map(([k, v]) => `<div>${esc(k)}</div><div>${esc(v ?? "")}</div>`).join("")}</div>${m}` +
-      (docs.length ? `<div style="margin:8px 0">${docs.map(x => `<button class="b" data-coa="${x}">Open COA ${x}</button>`).join(" ")}</div>` : "") +
-      `<h3>Lineage — back to original biomass / purchase</h3>${lineageHtml(r.lineage)}<h3>Made from this (${r.children.length})</h3><div id="pb2"></div><h3>Adjustments (${r.adjustments.length})</h3><div id="pb3"></div><h3>Lab results (${r.lab_results.length})</h3><div id="pb4"></div>` + trHtml;
+    $("pb").innerHTML =
+      sec("Details", `<div class="kv">${kv.map(([k, v]) => `<div>${esc(k)}</div><div>${esc(v ?? "")}</div>`).join("")}</div>${m}` + (docs.length ? `<div style="margin:8px 0">${docs.map(x => `<button class="b" data-coa="${x}">Open COA ${x}</button>`).join(" ")}</div>` : ""), true) +
+      sec(`History (${(r.timeline || []).length} events)`, timelineHtml(r.timeline), true) +
+      sec("Lineage — back to original biomass / purchase", lineageHtml(r.lineage), true) +
+      sec(`Made from this (${r.children.length})`, `<div id="pb2"></div>`, false) +
+      sec(`Adjustments (${r.adjustments.length})`, `<div id="pb3"></div>`, false) +
+      sec(`Lab results (${r.lab_results.length})`, `<div id="pb4"></div>`, false) +
+      sec(`Manifests this tag appears on (${tr.length})`, `<div id="pbt"></div>`, false);
     const sub = [{ h: "Tag", k: "label", f: x => lblLink(x.label) }, { h: "Item", k: "item_name" }, { h: "Original", n: 1, f: x => fmt(x.OriginalPackageQuantity, 2) + " " + esc(x.uom) }, { h: "Now", n: 1, f: x => fmt(x.quantity, 2) + " " + esc(x.uom) }, { h: "Status", k: "status" }];
     grid("pb2", [...sub.slice(0, 2), { h: "Packaged", k: "packaged_date" }, ...sub.slice(2)], r.children, { h: "40vh" });
     grid("pb3", [{ h: "Date", k: "adjustment_date" }, { h: "g", n: 1, f: x => fmt(x.grams, 2) }, { h: "Reason", k: "reason" }, { h: "Note", k: "note" }, { h: "User", k: "adjusted_by" }], r.adjustments);
@@ -564,6 +570,14 @@ function lineageHtml(L) {
   const origins = L.filter(n => n.depth > 0 && (n.received_from || !n.has_parents));
   const byOrigin = {}; origins.forEach(n => { const k = n.received_from ? `${n.received_from} (${n.received_license})` : `Grown · ${n.harvest || "unknown harvest"}`; byOrigin[k] = byOrigin[k] || { k, n: 0, g: 0, $: 0 }; byOrigin[k].n++; byOrigin[k].g += +n.orig_g || 0; byOrigin[k].$ += +n.price || 0; });
   return `<div class="note">${origins.length} origin package(s): ${Object.values(byOrigin).map(o => `<b>${esc(o.k)}</b> — ${o.n} pkg, ${fmt(o.g / 453.59237, 2)} lbs${o.$ ? `, $${fmt(o.$, 2)}` : ""}`).join(" · ")}</div><div class="tree">${node(root, 0)}</div>`;
+}
+
+
+const sec = (title, body, open) => `<details class="sec" ${open ? "open" : ""}><summary><h3>${title}</h3></summary>${body}</details>`;
+function timelineHtml(T) {
+  if (!T || !T.length) return `<div class="muted">No events.</div>`;
+  return `<div class="note">Rebuilt from METRC API data. Location moves, note edits and the user on non-adjustment actions only appear in METRC's own History tab, which the API doesn't expose.</div><ul class="tl">` +
+    T.map(e => `<li><span class="d">${esc(e.at || "")}</span><span class="k">${esc(e.kind)}</span>${esc(e.text || "")}${e.user ? ` <span class="muted">· ${esc(e.user)}</span>` : ""}${e.manifest ? ` · manifest ${mfLink(e.transfer_id, e.manifest)}` : ""}${e.label ? ` · ${lblLink(e.label)}` : ""}${e.coa ? ` <button class="b" data-coa="${e.coa}" style="padding:1px 8px;font-size:11px">COA</button>` : ""}</li>`).join("") + `</ul>`;
 }
 
 // ---------- package lookup typeahead
