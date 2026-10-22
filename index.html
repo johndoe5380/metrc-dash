@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="en"><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#14131F"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>NEXT ONE · METRC</title>
 <link rel="icon" href="favicon.ico?v=1" sizes="any">
 <link rel="shortcut icon" href="favicon.ico?v=1">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 :root{color-scheme:light;--k:#111;--g1:#F2F2F2;--g2:#D9D9D9;--g3:#BFBFBF;--g4:#8C8C8C;--bad:#9b1c1c;--warn:#7a5a00}
@@ -48,6 +48,42 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 .tree{border:1px solid var(--g3);background:rgba(255,255,255,.94);padding:6px 10px;max-height:60vh;overflow:auto}.tree details{margin-left:18px;border-left:1px solid var(--g2);padding-left:8px}.tree>details{margin-left:0;border-left:0;padding-left:0}.tree summary{cursor:pointer;padding:3px 0;list-style:none}.tree summary::-webkit-details-marker{display:none}.tree summary:before{content:"▸ ";color:var(--g4)}.tree details[open]>summary:before{content:"▾ "}.tree .leaf:before{content:"• ";color:var(--g4)}.tree .leaf{margin-left:18px;padding:3px 0}.org{display:inline-block;margin-left:6px;font-size:12px;padding:1px 6px;border:1px solid var(--k)}.org.grown{border-color:var(--g4);color:#444}
 details.sec{border-top:1px solid var(--g2);padding:2px 0}details.sec>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;padding:8px 0}details.sec>summary::-webkit-details-marker{display:none}details.sec>summary h3{margin:0}details.sec>summary:before{content:"▸";font-size:12px;color:var(--g4)}details.sec[open]>summary:before{content:"▾"}.tl{list-style:none;margin:0;padding:0 0 0 14px;border-left:2px solid var(--k)}.tl li{position:relative;padding:5px 0 7px 10px}.tl li:before{content:"";position:absolute;left:-19px;top:10px;width:8px;height:8px;background:#fff;border:2px solid var(--k);border-radius:50%}.tl .d{font-weight:700;font-variant-numeric:tabular-nums;margin-right:8px}.tl .k{font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border:1px solid var(--g4);padding:0 6px;margin-right:6px}
 footer{position:relative;z-index:1;text-align:center;font-weight:500;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#333;padding:16px 0 26px}
+
+/* ===== Hazē / Next1 site theme (next1labs.com: --clr-accent #14131F, cyan #4EFEFF, pink #F32795; Hazē blue #0B8EC0, Artizinal purple #C44FF6 / green #90EB69) ===== */
+:root{--k:#14131F;--ink:#1D1D1D;--char:#242123;--slate:#434149;--cyan:#4EFEFF;--pink:#F32795;--blue:#0B8EC0;--purple:#C44FF6;--green:#90EB69;--lsugar:#D46FFF;--lbudder:#91FF7E;--g1:#F0F0F0;--g2:#E4E4E8;--bad:#D61F7E;--warn:#9a6a00;--ok:#1f8a4c}
+body{background:#fafafb}
+header{background:linear-gradient(100deg,var(--k) 0%,var(--char) 60%,#1b1a2a 100%);border-bottom:0;color:#fff;box-shadow:0 2px 0 var(--cyan),0 6px 18px rgba(78,254,255,.18)}
+header img{filter:invert(1) brightness(2)}
+header h1{color:#fff}header .sub{color:#b9b8c6}#sync{color:#b9b8c6}#sync .err{color:var(--pink)}
+#lk input{border:1px solid var(--slate);background:#1d1c2b;color:#fff}#lk input::placeholder{color:#8d8c9c}#lk input:focus{outline:2px solid var(--cyan);outline-offset:-1px}
+#sug{border-color:var(--cyan)}#sug div:hover,#sug div.on{background:var(--k);color:var(--cyan)}
+nav{background:var(--ink);border-bottom:1px solid #2c2b3a}
+nav button{color:#a9a8b8}nav button:hover{color:#fff}nav button.on{color:var(--cyan);border-color:var(--cyan);text-shadow:0 0 12px rgba(78,254,255,.45)}
+h2{color:var(--k)}h2:after{content:"";display:block;width:56px;height:3px;margin-top:6px;background:linear-gradient(90deg,var(--cyan),var(--purple),var(--pink))}
+th{background:var(--k);border-bottom:2px solid var(--cyan)}
+tbody tr:nth-child(even) td{background:#f4f4f7}tr.click:hover td{background:#e8fbfb}
+a.lk{color:var(--blue);text-decoration-color:rgba(11,142,192,.4)}a.lk:hover{color:var(--k);text-decoration-color:var(--cyan)}
+button.b{border-color:var(--k);color:var(--k)}button.b:hover,button.b.on{background:var(--k);color:var(--cyan);border-color:var(--k)}
+.kpi{border-color:#dcdce3;border-top:3px solid var(--slate)}
+.kpi:nth-child(5n+1){border-top-color:var(--cyan)}.kpi:nth-child(5n+2){border-top-color:var(--purple)}.kpi:nth-child(5n+3){border-top-color:var(--green)}.kpi:nth-child(5n+4){border-top-color:var(--pink)}.kpi:nth-child(5n+5){border-top-color:var(--blue)}
+.kpi b{font-family:"Roboto Mono",ui-monospace,monospace;font-weight:700;letter-spacing:-.02em}
+.kpi.act:hover{border-color:var(--k);box-shadow:0 0 0 1px var(--k),0 6px 16px rgba(78,254,255,.25)}
+.kpi.dark{background:var(--k);color:#fff;border-color:var(--k);border-top-color:var(--cyan);box-shadow:0 0 0 1px var(--k),0 0 18px rgba(78,254,255,.25)}.kpi.dark span{color:var(--cyan)}
+.stat b{font-family:"Roboto Mono",ui-monospace,monospace;color:var(--k)}
+.lbl{font-family:"Roboto Mono",ui-monospace,monospace}
+.tag{border-color:#b9b8c6;color:var(--slate)}
+.tag.ok{background:var(--green);border-color:#6fcf4a;color:var(--k)}
+.tag.bad{background:#fde4f1;border-color:var(--pink);color:var(--bad)}
+.tag.warn{background:#fff6dc;border-color:#e3b23c;color:var(--warn)}
+.neg{color:var(--bad)}.err{color:var(--bad)}
+#drawer{border-left:0;box-shadow:-8px 0 30px rgba(20,19,31,.25)}#drawer:before{content:"";position:sticky;top:-18px;display:block;height:4px;margin:-18px -22px 14px;background:linear-gradient(90deg,var(--cyan),var(--purple),var(--pink))}
+details.sec>summary h3{color:var(--k)}details.sec>summary:before{color:var(--purple)}
+.tl{border-left-color:var(--purple)}.tl li:before{border-color:var(--purple)}.tl .k{border-color:var(--purple);color:#7a2aa3}
+.tree details{border-left-color:#e3d0ef}.org{border-color:var(--blue);color:#0a6f96}.org.grown{border-color:#6fcf4a;color:#2c7a12}
+.chart{border-color:#dcdce3}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--cyan)!important;outline-offset:-1px}
+footer{color:var(--slate)}
+body:before{opacity:.04}
 </style></head>
 <body>
 <header><img src="data:image/png;base64,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" alt="Next One"><div><h1>METRC Command</h1><div class="sub">Next One Labs · all licenses · read-only</div></div><div id="lk"><input id="lkq" placeholder="Package lookup · last 4+ characters" autocomplete="off"><div id="sug"></div></div><div id="sync">loading…</div></header>
@@ -169,7 +205,7 @@ loaders.prod = async () => { $("ptable").textContent = "Loading…"; try {
   const tg = d.by_sku.reduce((a, r) => a + (+r.g || 0), 0), tu = d.by_sku.reduce((a, r) => a + (+r.units || 0), 0), tp = d.by_sku.reduce((a, r) => a + r.pkgs, 0), tb = d.by_sku.reduce((a, r) => a + r.batches, 0);
   $("pstats").innerHTML = `<div class="stat"><b>${d.by_sku.length}</b><span>SKUs</span></div><div class="stat"><b>${fmt(tb)}</b><span>batches</span></div><div class="stat"><b>${fmt(tp)}</b><span>packages</span></div><div class="stat"><b>${fmt(tg)}</b><span>grams</span></div><div class="stat"><b>${lb(tg)}</b><span>lbs</span></div><div class="stat"><b>${fmt(tu)}</b><span>units</span></div>`;
   const days = [...new Set(d.by_day.map(r => r.d))].sort(), cats = [...new Set(d.by_day.map(r => r.category))];
-  const greys = ["#111", "#555", "#8C8C8C", "#BFBFBF", "#333", "#777", "#A6A6A6", "#D9D9D9"];
+  const greys = ["#14131F", "#0B8EC0", "#C44FF6", "#90EB69", "#F32795", "#4EFEFF", "#434149", "#D46FFF"];
   if (pchart) pchart.destroy();
   if (window.Chart) pchart = new Chart($("pchart"), { type: "bar", data: { labels: days, datasets: cats.map((c, i) => ({ label: c, backgroundColor: greys[i % greys.length], data: days.map(x => { const r = d.by_day.find(y => y.d === x && y.category === c); return r ? +r.g : 0; }) })) },
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { font: { family: "Barlow Semi Condensed", size: 12 } } }, title: { display: true, text: "GRAMS PACKAGED PER DAY", font: { family: "Barlow Semi Condensed", weight: "700" } } },
