@@ -399,8 +399,8 @@ async function openPkg(label) {
     }
     $("pb").innerHTML = head +
       sec("Details", `<div class="kv">${kv.map(([k, v]) => `<div>${esc(k)}</div><div>${esc(v ?? "")}</div>`).join("")}</div>${m}` + (docs.length ? `<div style="margin:8px 0">${docs.map(x => `<button class="b" data-coa="${x}">Open COA ${x}</button>`).join(" ")}</div>` : ""), true) +
-      sec(`History (${(r.timeline || []).length} events)`, timelineHtml(r.timeline), true) +
-      sec("Lineage — back to original biomass / purchase", lineageHtml(r.lineage), true) +
+      sec(`History (${(r.timeline || []).length} events)`, timelineHtml(r.timeline), false) +
+      sec("Lineage — back to original biomass / purchase", lineageHtml(r.lineage), false) +
       sec(`Made from this (${r.children.length})`, `<div id="pb2"></div>`, false) +
       sec(`Adjustments (${r.adjustments.length})`, `<div id="pb3"></div>`, false) +
       sec(`Lab results (${r.lab_results.length})`, `<div id="pb4"></div>`, false) +
