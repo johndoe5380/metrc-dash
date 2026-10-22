@@ -190,7 +190,7 @@ nav{top:var(--hh,62px)}
 <div class="tools"><input type="date" id="kfrom"><input type="date" id="kto"><button class="b" id="kgo">Apply</button></div><div id="ktable"></div></section>
 
 <section id="adj" class="tab"><h2>Adjustments</h2><div class="tools"><select id="adays"><option value="7">7 days</option><option value="30">30 days</option><option value="60" selected>60 days</option><option value="120">120 days</option><option value="300">Since Jan</option></select><span class="muted">Flag = |adjustment| ≥ 1,000g or ≥ 10% of the package's original weight</span></div>
-<div id="asum"></div><div id="atable"></div><h3>Activity by user</h3><div class="note">METRC's API names the user on adjustments only; a full action log by badge still requires the METRC web UI.</div><div id="auser"></div></section>
+<div id="asum"></div><div id="atable"></div><h3>Activity by user <span class="muted" style="text-transform:none;letter-spacing:0;font-weight:500">· click a user</span></h3><div class="note">METRC's API names the user on adjustments only; a full action log by badge still requires the METRC web UI.</div><div id="auser"></div></section>
 
 <section id="audit" class="tab"><h2>N1 App vs METRC</h2><div class="note" id="anote"></div><div class="tools"><select id="asrc"><option value="">All sources</option><option>concentrate</option><option>vape</option><option>flower</option></select><select id="afind"><option value="">All findings</option></select><input id="aq" placeholder="Name, tag, batch…"></div><div id="audsum"></div><div id="audtable"></div></section>
 
@@ -399,7 +399,7 @@ loaders.adj = async () => { $("atable").textContent = "Loading…"; try { const 
   grid("atable", [{ h: "Date", k: "adjustment_date" }, { h: "Tag", k: "package_label", f: r => lblLink(r.package_label) }, { h: "Item", k: "item_name" }, { h: "License", k: "license" },
     { h: "Adjustment g", k: "grams", n: 1, f: r => `<b class="${r.grams < 0 ? "neg" : ""}">${fmt(r.grams, 1)}</b>` }, { h: "% of pkg", k: "pct_of_package", n: 1, f: r => r.pct_of_package == null ? "" : fmt(r.pct_of_package, 1) + "%" },
     { h: "Reason", k: "reason" }, { h: "Note", k: "note" }, { h: "User", k: "adjusted_by" }, { h: "Flag", f: r => (r.flag_size ? `<span class="tag bad">≥1,000g</span> ` : "") + (r.flag_pct ? `<span class="tag warn">≥10%</span>` : "") }], d.flagged);
-  grid("auser", [{ h: "User", k: "user" }, { h: "Adjustments", k: "count", n: 1 }, { h: "Net g", k: "net_g", n: 1, f: r => fmt(r.net_g, 1) }, { h: "Flagged", k: "flagged", n: 1 }], d.by_user);
+  grid("auser", [{ h: "User", k: "user", f: r => `<b>${esc(r.user)}</b>` }, { h: "Adjustments", k: "count", n: 1 }, { h: "Net g", k: "net_g", n: 1, f: r => fmt(r.net_g, 1) }, { h: "Flagged", k: "flagged", n: 1 }, { h: "", f: () => `<span class="muted">details ›</span>` }], d.by_user, { click: r => openUserAdj(r.user) });
 } catch (e) { fail("atable", e); } };
 $("adays").onchange = loaders.adj;
 
@@ -833,6 +833,27 @@ $("dmt").onclick = e => { e.preventDefault(); setDark(!document.body.classList.c
 
 // keep the sticky tab bar right under the header whatever its height
 (() => { const set = () => document.documentElement.style.setProperty("--hh", document.querySelector("header").offsetHeight + "px"); set(); window.addEventListener("resize", set); new ResizeObserver(set).observe(document.querySelector("header")); })();
+
+
+async function openUserAdj(user) {
+  const days = $("adays").value; lastDrawer = () => openUserAdj(user);
+  const dr = $("drawer"); dr.classList.add("on");
+  dr.innerHTML = `<span class="x" onclick="this.parentNode.classList.remove('on')">✕</span><h2>${esc(user)}</h2><div class="muted">Adjustments · last ${esc(days)} days</div><div id="uab">Loading…</div>`;
+  try {
+    const rows = await api("user_adj", { user, days });
+    const net = rows.reduce((a, r) => a + (+r.grams || 0), 0), neg = rows.filter(r => r.grams < 0).reduce((a, r) => a + (+r.grams || 0), 0), fl = rows.filter(r => r.flag_size || r.flag_pct).length;
+    const byReason = {}; rows.forEach(r => { const k = r.reason || "—"; byReason[k] = byReason[k] || { reason: k, n: 0, g: 0 }; byReason[k].n++; byReason[k].g += +r.grams || 0; });
+    $("uab").innerHTML = `<div class="kpis"><div class="kpi"><b>${rows.length}</b><span>adjustments</span></div><div class="kpi"><b>${fmt(net, 1)}</b><span>net g</span></div><div class="kpi"><b>${fmt(neg, 1)}</b><span>g removed</span></div><div class="kpi"><b>${fl}</b><span>flagged</span></div></div>
+      <div class="tools"><button class="b" id="uacsv">Download CSV</button><button class="b" id="ualist">Add all ${new Set(rows.map(r => r.package_label)).size} packages to a list</button></div>
+      ${sec("By reason", `<div id="uar"></div>`, false)}<h3>Adjustments</h3><div id="uat"></div>`;
+    grid("uar", [{ h: "Reason", k: "reason" }, { h: "Count", k: "n", n: 1 }, { h: "Net g", k: "g", n: 1, f: r => fmt(r.g, 1) }], Object.values(byReason).sort((a, b) => b.n - a.n));
+    grid("uat", [{ h: "Date", k: "adjustment_date" }, { h: "Tag", k: "package_label", f: r => lblLink(r.package_label) + " " + metrcBtn(r.package_label, r.license) }, { h: "Item", k: "item_name" }, { h: "License", k: "license" },
+      { h: "Adjustment g", k: "grams", n: 1, f: r => `<b class="${r.grams < 0 ? "neg" : ""}">${fmt(r.grams, 1)}</b>` }, { h: "% of pkg", k: "pct_of_package", n: 1, f: r => r.pct_of_package == null ? "" : fmt(r.pct_of_package, 1) + "%" },
+      { h: "Reason", k: "reason" }, { h: "Note", k: "note" }, { h: "Flag", f: r => (r.flag_size ? `<span class="tag bad">≥1,000g</span> ` : "") + (r.flag_pct ? `<span class="tag warn">≥10%</span>` : "") }], rows);
+    $("uacsv").onclick = () => download(`Adjustments_${user.replace(/\W+/g, "_")}_${days}d.csv`, toCSV(rows, [["Date", "adjustment_date"], ["Tag", "package_label"], ["Item", "item_name"], ["Category", "category"], ["License", "license"], ["Qty", "quantity"], ["UoM", "uom"], ["Grams", "grams"], ["% of package", "pct_of_package"], ["Reason", "reason"], ["Note", "note"], ["User", "adjusted_by"]]));
+    $("ualist").onclick = async () => { const L = await addToListPrompt([...new Set(rows.map(r => r.package_label))]); if (L) $("ualist").textContent = `Added to "${L.name}" ✓`; };
+  } catch (e) { fail("uab", e); }
+}
 
 // ---------- package lookup typeahead
 let lkT, lkSeq = 0, lkSel = -1, lkRows = [];
