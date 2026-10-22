@@ -232,9 +232,9 @@ th[draggable=true]{cursor:grab}th.thdrag{opacity:.4}th.thL{box-shadow:inset 3px 
 <section id="home" class="tab on"><h2>Today</h2><div class="note">METRC data syncs every 30 min, Mon–Fri; the N1 app snapshot is noted on the Audit tab. Click a card to jump to the detail.</div><div class="kpis" id="hk"></div>
 <div class="grid2"><div><h3>Production · last 7 days</h3><div id="hprod"></div></div><div><h3>Latest flagged adjustments</h3><div id="hadj"></div></div></div></section>
 
-<section id="prod" class="tab"><h2>Production BI</h2><div class="note">Every package created in METRC in the date range, by SKU. Click a SKU for its batches and packages; click a batch to list it in Inventory; click a tag for full package detail. Units come from METRC unit packages or the unit size in the item name.</div>
+<section id="prod" class="tab"><h2>Production BI</h2><div class="kpis" id="pk"></div><div class="note" id="pnote"></div>
 <div class="tools"><input type="date" id="pfrom"><input type="date" id="pto"><select id="plic"><option value="">All licenses</option></select><select id="pcat"><option value="">All categories</option></select><input id="pq" placeholder="SKU or batch contains…" size="24"><button class="b" id="pgo">Apply</button>
-<button class="b" data-r="7">7D</button><button class="b" data-r="30">30D</button><button class="b" data-r="90">90D</button><button class="b" data-r="ytd">YTD</button></div>
+<button class="b" data-r="7">7D</button><button class="b" data-r="30">30D</button><button class="b" data-r="90">90D</button><button class="b" data-r="ytd">YTD</button><select id="pgran" title="Chart grouping"><option value="day">Daily</option><option value="week">Weekly</option><option value="month">Monthly</option></select></div>
 <div id="pstats"></div><div class="chart"><canvas id="pchart"></canvas></div><div id="ptable"></div></section>
 
 <section id="inv" class="tab"><h2>Inventory</h2><div class="kpis" id="ik"></div><div class="note">All synced packages. Click any row for metrics: source and child packages, yield, adjustments, lab results and COA.</div>
@@ -281,7 +281,7 @@ async function api(cmd, args = {}, attempt = 0) {
   const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 45000);
   let r;
   try {
-    r = await fetch(`${SB}/rest/v1/rpc/metrc_feed4`, { method: "POST", signal: ctl.signal, headers: { apikey: ANON, Authorization: "Bearer " + ANON, "content-type": "application/json" },
+    r = await fetch(`${SB}/rest/v1/rpc/metrc_feed5`, { method: "POST", signal: ctl.signal, headers: { apikey: ANON, Authorization: "Bearer " + ANON, "content-type": "application/json" },
       body: JSON.stringify({ p_code: code(), p_cmd: cmd, p_args: args }) });
   } catch (e) { clearTimeout(tm); if (attempt < 1) return api(cmd, args, attempt + 1); throw new Error(e.name === "AbortError" ? "Timed out loading data" : "Couldn't reach the data server"); }
   clearTimeout(tm);
@@ -381,21 +381,71 @@ let pchart;
 $("pfrom").value = daysAgo(30); $("pto").value = iso(new Date());
 document.querySelectorAll("[data-r]").forEach(b => b.onclick = () => { const r = b.dataset.r; $("pfrom").value = r === "ytd" ? new Date().getFullYear() + "-01-01" : daysAgo(+r); $("pto").value = iso(new Date()); loaders.prod(); });
 $("pgo").onclick = () => loaders.prod(); $("pq").onkeydown = e => { if (e.key === "Enter") loaders.prod(); }; ["plic", "pcat"].forEach(id => $(id).onchange = () => loaders.prod());
+const P = { view: "produced", d: null, args: null };
+try { $("pgran").value = localStorage.getItem("metrc_pgran") || "day"; } catch (_) {}
+$("pgran").onchange = () => { try { localStorage.setItem("metrc_pgran", $("pgran").value); } catch (_) {} drawProdChart(); };
+const PNOTE = {
+  produced: "Concentrate and vape packages N1 made in the date range, at their <b>original packaged weight</b>. Sub-packages split off a finished package (e.g. 10 g breakdowns) are excluded so nothing is counted twice; columns, crude, bulk distillate, pre-rolls, samples and anything bought in are left out. Click a SKU for its batches and packages.",
+  onhand: "Concentrate and vape N1 made that is still active in METRC right now, at <b>current weight</b> (includes sub-packages). The date range doesn't apply. Click a SKU for its packages.",
+  shipped: "Concentrate and vape N1 made that left on an outgoing manifest in the date range (by ship date; voided and returned excluded). Click a SKU for its packages and manifests." };
+function bucketDate(d, g) { if (g === "month") return d.slice(0, 7); if (g === "week") { const t = new Date(d + "T00:00:00"); t.setDate(t.getDate() - ((t.getDay() + 6) % 7)); return iso(t); } return d; }
+function drawProdChart() {
+  if (pchart) pchart.destroy(); pchart = null;
+  const d = P.d; if (!d || !d.by_day || P.view === "onhand") { $("pchart").parentNode.style.display = "none"; return; }
+  $("pchart").parentNode.style.display = "";
+  const g = $("pgran").value, agg = {};
+  d.by_day.forEach(r => { const k = bucketDate(r.d, g) + "|" + r.category; agg[k] = (agg[k] || 0) + (+r.g || 0); });
+  const days = [...new Set(Object.keys(agg).map(k => k.split("|")[0]))].sort(), cats = [...new Set(d.by_day.map(r => r.category))];
+  const greys = ["#14131F", "#0B8EC0", "#C44FF6", "#90EB69", "#F32795", "#4EFEFF", "#434149", "#D46FFF"];
+  const word = { day: "DAY", week: "WEEK", month: "MONTH" }[g], verb = P.view === "shipped" ? "SHIPPED" : "PACKAGED";
+  if (window.Chart) pchart = new Chart($("pchart"), { type: "bar", data: { labels: g === "week" ? days.map(x => "wk of " + x) : days, datasets: cats.map((c, i) => ({ label: c, backgroundColor: greys[i % greys.length], data: days.map(x => agg[x + "|" + c] || 0) })) },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { font: { family: "Barlow Semi Condensed", size: 12 } } }, title: { display: true, text: `GRAMS ${verb} PER ${word}`, font: { family: "Barlow Semi Condensed", weight: "700" } } },
+      scales: { x: { stacked: true, ticks: { font: { family: "Barlow Semi Condensed" } } }, y: { stacked: true, ticks: { font: { family: "Barlow Semi Condensed" } } } } } });
+}
 loaders.prod = async () => { $("ptable").textContent = "Loading…"; try {
   const args = { from: $("pfrom").value, to: $("pto").value, license: $("plic").value, category: $("pcat").value, q: $("pq").value.trim() };
-  const d = await api("production", args);
-  if ($("pcat").options.length < 2) $("pcat").innerHTML += (d.categories || []).sort().map(c => `<option>${esc(c)}</option>`).join("");
-  const tg = d.by_sku.reduce((a, r) => a + (+r.g || 0), 0), tu = d.by_sku.reduce((a, r) => a + (+r.units || 0), 0), tp = d.by_sku.reduce((a, r) => a + r.pkgs, 0), tb = d.by_sku.reduce((a, r) => a + r.batches, 0);
-  $("pstats").innerHTML = `<div class="stat"><b>${d.by_sku.length}</b><span>SKUs</span></div><div class="stat"><b>${fmt(tb)}</b><span>batches</span></div><div class="stat"><b>${fmt(tp)}</b><span>packages</span></div><div class="stat"><b>${fmt(tg)}</b><span>grams</span></div><div class="stat"><b>${lb(tg)}</b><span>lbs</span></div><div class="stat"><b>${fmt(tu)}</b><span>units</span></div>`;
-  const days = [...new Set(d.by_day.map(r => r.d))].sort(), cats = [...new Set(d.by_day.map(r => r.category))];
-  const greys = ["#14131F", "#0B8EC0", "#C44FF6", "#90EB69", "#F32795", "#4EFEFF", "#434149", "#D46FFF"];
-  if (pchart) pchart.destroy();
-  if (window.Chart) pchart = new Chart($("pchart"), { type: "bar", data: { labels: days, datasets: cats.map((c, i) => ({ label: c, backgroundColor: greys[i % greys.length], data: days.map(x => { const r = d.by_day.find(y => y.d === x && y.category === c); return r ? +r.g : 0; }) })) },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { font: { family: "Barlow Semi Condensed", size: 12 } } }, title: { display: true, text: "GRAMS PACKAGED PER DAY", font: { family: "Barlow Semi Condensed", weight: "700" } } },
-      scales: { x: { stacked: true, ticks: { font: { family: "Barlow Semi Condensed" } } }, y: { stacked: true, ticks: { font: { family: "Barlow Semi Condensed" } } } } } });
-  grid("ptable", [{ h: "SKU", k: "item_name", f: r => `<b>${esc(r.item_name)}</b>` }, { h: "Category", k: "category" }, { h: "Batches", k: "batches", n: 1 }, { h: "Packages", k: "pkgs", n: 1 },
-    { h: "Grams", k: "g", n: 1, f: r => fmt(r.g, 1) }, { h: "Lbs", k: "g", n: 1, f: r => lb(r.g) }, { h: "Units", k: "units", n: 1, f: r => fmt(r.units) }, { h: "First", k: "first_date" }, { h: "Last", k: "last_date" }], d.by_sku, { key: "production", click: r => openSku(r.item_name, args) });
+  P.args = args; $("pnote").innerHTML = PNOTE[P.view];
+  api("prod_counts", args).then(c => bucketCards("pk", [
+    { key: "produced", label: `Produced · ${lb(c.produced.g)} lb`, n: c.produced.pkgs },
+    { key: "onhand", label: `On hand now · ${lb(c.onhand.g)} lb`, n: c.onhand.pkgs },
+    { key: "shipped", label: `Shipped · ${lb(c.shipped.g)} lb`, n: c.shipped.pkgs }], P.view, k => { P.view = k; loaders.prod(); })).catch(() => {});
+  ["pfrom", "pto"].forEach(id => $(id).disabled = P.view === "onhand");
+  let rows;
+  if (P.view === "produced") {
+    const d = await api("production", args); P.d = d; rows = d.by_sku;
+    if ($("pcat").options.length < 2) $("pcat").innerHTML += (d.categories || []).sort().map(c => `<option>${esc(c)}</option>`).join("");
+    const tg = rows.reduce((a, r) => a + (+r.g || 0), 0), tu = rows.reduce((a, r) => a + (+r.units || 0), 0), tp = rows.reduce((a, r) => a + r.pkgs, 0), tb = rows.reduce((a, r) => a + r.batches, 0);
+    $("pstats").innerHTML = `<div class="stat"><b>${rows.length}</b><span>SKUs</span></div><div class="stat"><b>${fmt(tb)}</b><span>batches</span></div><div class="stat"><b>${fmt(tp)}</b><span>packages</span></div><div class="stat"><b>${fmt(tg)}</b><span>grams</span></div><div class="stat"><b>${lb(tg)}</b><span>lbs</span></div><div class="stat"><b>${fmt(tu)}</b><span>units</span></div>`;
+    drawProdChart();
+    grid("ptable", [{ h: "SKU", k: "item_name", f: r => `<b>${esc(r.item_name)}</b>` }, { h: "Category", k: "category" }, { h: "Batches", k: "batches", n: 1 }, { h: "Packages", k: "pkgs", n: 1 },
+      { h: "Grams", k: "g", n: 1, f: r => fmt(r.g, 1) }, { h: "Lbs", k: "g", n: 1, f: r => lb(r.g) }, { h: "Units", k: "units", n: 1, f: r => fmt(r.units) }, { h: "First", k: "first_date" }, { h: "Last", k: "last_date" }], rows, { key: "production", click: r => openSku(r.item_name, args) });
+  } else if (P.view === "onhand") {
+    rows = await api("prod_onhand", args); P.d = null; drawProdChart();
+    const tg = rows.reduce((a, r) => a + (+r.g || 0), 0), tu = rows.reduce((a, r) => a + (+r.units || 0), 0), tp = rows.reduce((a, r) => a + r.pkgs, 0);
+    $("pstats").innerHTML = `<div class="stat"><b>${rows.length}</b><span>SKUs</span></div><div class="stat"><b>${fmt(tp)}</b><span>packages</span></div><div class="stat"><b>${fmt(tg)}</b><span>grams</span></div><div class="stat"><b>${lb(tg)}</b><span>lbs</span></div><div class="stat"><b>${fmt(tu)}</b><span>units</span></div>`;
+    grid("ptable", [{ h: "SKU", k: "item_name", f: r => `<b>${esc(r.item_name)}</b>` }, { h: "Category", k: "category" }, { h: "Batches", k: "batches", n: 1 }, { h: "Packages", k: "pkgs", n: 1 },
+      { h: "Grams", k: "g", n: 1, f: r => fmt(r.g, 1) }, { h: "Lbs", k: "g", n: 1, f: r => lb(r.g) }, { h: "Units", k: "units", n: 1, f: r => fmt(r.units) }, { h: "Not yet passed", k: "untested", n: 1 }, { h: "Oldest", k: "oldest" }, { h: "Newest", k: "newest" }], rows, { key: "prod_onhand", click: r => openSkuOnhand(r.item_name, args) });
+  } else {
+    const d = await api("prod_shipped", args); P.d = d; rows = d.by_sku;
+    const tg = rows.reduce((a, r) => a + (+r.g || 0), 0), tu = rows.reduce((a, r) => a + (+r.units || 0), 0), tp = rows.reduce((a, r) => a + r.pkgs, 0), td = rows.reduce((a, r) => a + (+r.dollars || 0), 0);
+    $("pstats").innerHTML = `<div class="stat"><b>${rows.length}</b><span>SKUs</span></div><div class="stat"><b>${fmt(tp)}</b><span>packages</span></div><div class="stat"><b>${fmt(tg)}</b><span>grams</span></div><div class="stat"><b>${lb(tg)}</b><span>lbs</span></div><div class="stat"><b>${fmt(tu)}</b><span>units</span></div><div class="stat"><b>$${fmt(td)}</b><span>shipper $</span></div>`;
+    drawProdChart();
+    grid("ptable", [{ h: "SKU", k: "item_name", f: r => `<b>${esc(r.item_name)}</b>` }, { h: "Category", k: "category" }, { h: "Packages", k: "pkgs", n: 1 }, { h: "Manifests", k: "manifests", n: 1 }, { h: "Recipients", k: "recipients", n: 1 },
+      { h: "Grams", k: "g", n: 1, f: r => fmt(r.g, 1) }, { h: "Lbs", k: "g", n: 1, f: r => lb(r.g) }, { h: "Units", k: "units", n: 1, f: r => fmt(r.units) }, { h: "Shipper $", k: "dollars", n: 1, f: r => r.dollars == null ? "" : "$" + fmt(r.dollars, 2) }, { h: "First", k: "first_date" }, { h: "Last", k: "last_date" }], rows, { key: "prod_shipped", click: r => openSkuShipped(r.item_name, args) });
+  }
 } catch (e) { fail("ptable", e); } };
+function skuDrawer(item, sub) { const dr = $("drawer"); dr.classList.add("on"); dr.innerHTML = `<span class="x" onclick="this.parentNode.classList.remove('on')">✕</span><h2>${esc(item)}</h2><div class="muted">${sub}</div><div id="skb">Loading…</div>`; return dr; }
+async function openSkuOnhand(item, args) {
+  skuDrawer(item, "On hand now");
+  try { const rows = await api("sku_onhand", { item, license: args.license });
+    grid("skb", [{ h: "Tag", k: "label", f: r => lblLink(r.label) }, { h: "Batch", k: "batch" }, { h: "Packaged", k: "packaged_date" }, { h: "Now (g)", k: "qty_g", n: 1, f: r => fmt(r.qty_g, 1) }, { h: "Units", k: "units", n: 1, f: r => fmt(r.units) }, { h: "Lab", k: "lab_state", f: r => `<span class="tag ${tagFor(r.lab_state)}">${esc(r.lab_state)}</span>` }, { h: "Split from finished pkg", k: "is_original", f: r => r.is_original ? "" : "yes" }], rows);
+  } catch (e) { fail("skb", e); } }
+async function openSkuShipped(item, args) {
+  skuDrawer(item, `Shipped ${esc(args.from)} → ${esc(args.to)}`);
+  try { const rows = await api("sku_shipped", { item, from: args.from, to: args.to, license: args.license });
+    grid("skb", [{ h: "Tag", k: "label", f: r => lblLink(r.label) }, { h: "Batch", k: "batch" }, { h: "Shipped", k: "ship_date" }, { h: "Manifest", k: "manifest_number", f: r => r.transfer_id ? `<a class="lk" data-mf="${esc(r.transfer_id)}">${esc(r.manifest_number)}</a>` : esc(r.manifest_number) }, { h: "To", k: "recipient_name" }, { h: "Qty", k: "shipped_qty", n: 1, f: r => fmt(r.shipped_qty, 2) + " " + esc(r.shipped_uom) }, { h: "Grams", k: "shipped_g", n: 1, f: r => fmt(r.shipped_g, 1) }, { h: "Shipper $", k: "shipper_price", n: 1, f: r => r.shipper_price == null ? "" : "$" + fmt(r.shipper_price, 2) }, { h: "State", k: "shipment_state" }], rows);
+    $("skb").querySelectorAll("[data-mf]").forEach(a => a.onclick = () => openManifestById(a.dataset.mf));
+  } catch (e) { fail("skb", e); } }
 async function openSku(item, args) {
   const dr = $("drawer"); dr.classList.add("on"); dr.innerHTML = `<span class="x" onclick="this.parentNode.classList.remove('on')">✕</span><h2>${esc(item)}</h2><div class="muted">${esc(args.from)} → ${esc(args.to)}</div><div id="skb">Loading…</div>`;
   try { const rows = await api("sku_batches", { item, from: args.from, to: args.to });
