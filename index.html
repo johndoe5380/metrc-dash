@@ -312,7 +312,7 @@ async function openPkg(label) {
     const parentsG = r.parents.reduce((a, x) => a + gOf(x), 0), childG = r.children.reduce((a, x) => a + gOf(x), 0);
     const docs = [...new Set(r.lab_results.map(x => x.document_file_id).filter(Boolean))];
     const kv = [["Item", p.item_name], ["Category", p.category], ["License", p.license], ["Status", p.status + (p.is_on_hold ? " · ON HOLD" : "") + (p.is_finished ? ` · finished ${p.finished_date}` : "")],
-      ["Current", fmt(p.quantity, 2) + " " + p.uom], ["Original", fmt(orig, 2) + " " + p.uom], ["Net adjustments", fmt(adjNet, 1) + "g" + (orig && p.uom === "g" ? ` (${fmt(100 * adjNet / orig, 2)}%)` : "")],
+      ["Current", fmt(p.quantity, 2) + " " + p.uom], [p.received_from ? "Received" : "Original", fmt(orig, 2) + " " + p.uom + (p.CreatedAtSource ? ` (created as ${fmt(p.CreatedAtSource, 2)} at the shipper)` : "")], ["Net adjustments", fmt(adjNet, 1) + "g" + (orig && p.uom === "g" ? ` (${fmt(100 * adjNet / orig, 2)}%)` : "")],
       ["Lab", `${p.lab_state || ""} (${p.lab_state_date || "—"})`], ["Packaged", p.packaged_date], ["Batch", p.production_batch || p.source_production_batches], ["Harvest(s)", p.source_harvest_names], ["Location", p.location],
       ["Received from", p.received_from ? `${p.received_from} · manifest ${p.received_manifest}` : ""], ["Note", p.Note]];
     let m = r.cost ? `<div class="stat"><b>$${fmt(r.cost.cost_g * 453.59237, 2)}/lb</b><span>${r.cost.depth == 0 ? "purchase price" : "biomass cost traced through " + r.cost.depth + " generation(s)"} · $${fmt(r.cost.cost_g, 3)}/g${r.cost.coverage < 0.999 ? ` · ${fmt(100 * r.cost.coverage, 0)}% of source weight priced` : ""}</span></div>` : "";
