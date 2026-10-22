@@ -203,6 +203,14 @@ body.dark .kv div{border-bottom:1px solid #2e2d40;padding:4px 0}
 
 body.dark td+td,body.dark th+th{border-left:1px solid #2e2d40}
 body.dark th{border-bottom:2px solid var(--cyan)}
+
+.colbar{position:relative;display:flex;justify-content:flex-end;margin:-4px 0 6px}
+.colbtn{padding:3px 10px!important;font-size:11.5px!important}
+.colpop{display:none;position:absolute;right:0;top:100%;z-index:30;background:#fff;border:1px solid #c9c9d3;box-shadow:0 10px 26px rgba(20,19,31,.2);padding:8px 12px;min-width:220px;max-height:60vh;overflow:auto}
+.colbar.open .colpop{display:block}
+.colpop label{display:block;padding:3px 0;white-space:nowrap;font-size:13.5px;cursor:pointer}
+.colact{border-top:1px solid #e4e4e8;margin-top:6px;padding-top:6px;font-size:12px}
+body.dark .colpop{background:#1a1928;border-color:#3d3c52;color:#e7e6ef}body.dark .colact{border-top-color:#3d3c52}
 </style></head>
 <body>
 <header><img src="data:image/png;base64,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" alt="Next One"><div><h1>METRC Command</h1><div class="sub">Next One Labs · all licenses · read-only</div></div><div id="sync">loading…</div><button class="b" id="rfb" title="Reload this view's data" style="margin-left:14px;border-color:#5b5a6b;color:#e7e6ef;background:transparent">↻ Refresh</button><label class="dm" id="dmt" title="Dark mode"><span class="sw"></span><span>Dark</span></label></header>
@@ -290,16 +298,36 @@ function refreshView() {
 
 function grid(el, cols, rows, opts = {}) {
   const host = typeof el === "string" ? $(el) : el; let data = rows.slice(); let sk = null, sd = 1;
+  // optional column chooser: opts.key = table id; columns with hide:true are available but off by default; choice saved per browser
+  const cid = c => c.id || c.h;
+  const fixed = c => !c.h || c.h === "✓" || c.fixed;
+  const loadVis = () => { if (!opts.key) return null; try { return JSON.parse(localStorage.getItem("cols:" + opts.key) || "null"); } catch (_) { return null; } };
+  const visCols = () => { const s = loadVis(); return cols.filter(c => fixed(c) || (s ? s.includes(cid(c)) : !c.hide)); };
   const draw = () => {
-    if (!data.length) { host.innerHTML = `<div class="muted">Nothing here.</div>`; return; }
-    host.innerHTML = `<div class="wrap" style="${opts.h ? "max-height:" + opts.h : ""}"><table><thead><tr>${cols.map((c, i) => `<th data-i="${i}" class="${c.n ? "n" : ""}">${esc(c.h)}${sk === i ? (sd > 0 ? " ▲" : " ▼") : ""}</th>`).join("")}</tr></thead><tbody>` +
-      data.map((r, ri) => `<tr class="${opts.click ? "click" : ""}" data-ri="${ri}">` + cols.map(c => `<td class="${c.n ? "n" : ""}">${c.f ? c.f(r) : esc(r[c.k])}</td>`).join("") + `</tr>`).join("") + `</tbody></table></div>`;
-    host.querySelectorAll("th").forEach(th => th.onclick = () => { const i = +th.dataset.i, k = cols[i].sk || cols[i].k; if (!k) return; sd = sk === i ? -sd : 1; sk = i;
+    const vc = visCols();
+    const chooser = opts.key ? `<div class="colbar"><button class="b colbtn" title="Show / hide columns">⚙ Columns</button><div class="colpop">${cols.filter(c => !fixed(c)).map(c => `<label><input type="checkbox" value="${esc(cid(c))}" ${vc.includes(c) ? "checked" : ""}> ${esc(c.h)}</label>`).join("")}<div class="colact"><a class="lk colreset">Reset to default</a></div></div></div>` : "";
+    if (!data.length) { host.innerHTML = chooser + `<div class="muted">Nothing here.</div>`; bindChooser(); return; }
+    host.innerHTML = chooser + `<div class="wrap" style="${opts.h ? "max-height:" + opts.h : ""}"><table><thead><tr>${vc.map((c, i) => `<th data-i="${i}" class="${c.n ? "n" : ""}">${esc(c.h)}${sk === cid(c) ? (sd > 0 ? " ▲" : " ▼") : ""}</th>`).join("")}</tr></thead><tbody>` +
+      data.map((r, ri) => `<tr class="${opts.click ? "click" : ""}" data-ri="${ri}">` + vc.map(c => `<td class="${c.n ? "n" : ""}">${c.f ? c.f(r) : esc(r[c.k])}</td>`).join("") + `</tr>`).join("") + `</tbody></table></div>`;
+    host.querySelectorAll("th").forEach(th => th.onclick = () => { const c = vc[+th.dataset.i], k = c.sk || c.k; if (!k) return; sd = sk === cid(c) ? -sd : 1; sk = cid(c);
       data.sort((a, b) => { const x = a[k], y = b[k]; if (x == null) return 1; if (y == null) return -1; const nx = Number(x), ny = Number(y); return (!isNaN(nx) && !isNaN(ny) ? nx - ny : String(x).localeCompare(String(y))) * sd; }); draw(); });
     if (opts.click) host.querySelectorAll("tbody tr").forEach(tr => tr.onclick = e => { if (!e.target.closest("a,button,input,label")) opts.click(data[+tr.dataset.ri]); });
+    bindChooser();
   };
+  function bindChooser() {
+    if (!opts.key) return;
+    const bar = host.querySelector(".colbar"); if (!bar) return;
+    bar.querySelector(".colbtn").onclick = e => { e.stopPropagation(); bar.classList.toggle("open"); };
+    bar.querySelectorAll(".colpop input").forEach(cb => cb.onchange = () => {
+      const on = [...bar.querySelectorAll(".colpop input:checked")].map(x => x.value);
+      try { localStorage.setItem("cols:" + opts.key, JSON.stringify(on)); } catch (_) {}
+      draw(); host.querySelector(".colbar").classList.add("open");
+    });
+    bar.querySelector(".colreset").onclick = () => { try { localStorage.removeItem("cols:" + opts.key); } catch (_) {} draw(); };
+  }
   draw();
 }
+document.addEventListener("click", e => { if (!e.target.closest(".colbar")) document.querySelectorAll(".colbar.open").forEach(b => b.classList.remove("open")); });
 document.addEventListener("click", async e => {
   const a = e.target.closest("[data-label]"); if (a) { e.preventDefault(); openPkg(a.dataset.label); return; }
   const c = e.target.closest("[data-coa]"); if (c) { const t = c.textContent; c.textContent = "Opening…"; try { await openCoa(+c.dataset.coa); c.textContent = "Opened ✓"; } catch (err) { c.textContent = "Failed"; } setTimeout(() => c.textContent = t, 3000); }
@@ -340,8 +368,7 @@ loaders.prod = async () => { $("ptable").textContent = "Loading…"; try {
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { font: { family: "Barlow Semi Condensed", size: 12 } } }, title: { display: true, text: "GRAMS PACKAGED PER DAY", font: { family: "Barlow Semi Condensed", weight: "700" } } },
       scales: { x: { stacked: true, ticks: { font: { family: "Barlow Semi Condensed" } } }, y: { stacked: true, ticks: { font: { family: "Barlow Semi Condensed" } } } } } });
   grid("ptable", [{ h: "SKU", k: "item_name", f: r => `<b>${esc(r.item_name)}</b>` }, { h: "Category", k: "category" }, { h: "Batches", k: "batches", n: 1 }, { h: "Packages", k: "pkgs", n: 1 },
-    { h: "Grams", k: "g", n: 1, f: r => fmt(r.g, 1) }, { h: "Lbs", k: "g", n: 1, f: r => lb(r.g) }, { h: "Units", k: "units", n: 1, f: r => fmt(r.units) }, { h: "First", k: "first_date" }, { h: "Last", k: "last_date" }],
-    d.by_sku, { click: r => openSku(r.item_name, args) });
+    { h: "Grams", k: "g", n: 1, f: r => fmt(r.g, 1) }, { h: "Lbs", k: "g", n: 1, f: r => lb(r.g) }, { h: "Units", k: "units", n: 1, f: r => fmt(r.units) }, { h: "First", k: "first_date" }, { h: "Last", k: "last_date" }], d.by_sku, { key: "production", click: r => openSku(r.item_name, args) });
 } catch (e) { fail("ptable", e); } };
 async function openSku(item, args) {
   const dr = $("drawer"); dr.classList.add("on"); dr.innerHTML = `<span class="x" onclick="this.parentNode.classList.remove('on')">✕</span><h2>${esc(item)}</h2><div class="muted">${esc(args.from)} → ${esc(args.to)}</div><div id="skb">Loading…</div>`;
@@ -368,8 +395,11 @@ loaders.inv = async () => { loaded.inv = 1; $("itable").textContent = "Loading�
   $("invall").onclick = () => document.querySelectorAll(".invpick").forEach(x => x.checked = true);
   grid("it2", [{ h: "✓", f: r => `<input type="checkbox" class="invpick" value="${esc(r.label)}">` }, { h: "Tag", k: "label", f: r => lblLink(r.label) + " " + metrcBtn(r.label, r.license) }, { h: "Item", k: "item_name" }, { h: "Category", k: "category" }, { h: "License", k: "license" }, { h: "Batch", k: "batch" },
     { h: "Qty", k: "quantity", n: 1, f: r => fmt(r.quantity, 2) + " " + esc(r.uom) }, { h: "Grams", k: "qty_g", n: 1, f: r => fmt(r.qty_g, 1) }, { h: "Adj g", k: "adj_g", n: 1, f: r => +r.adj_g ? `<span class="${r.adj_g < 0 ? "neg" : ""}">${fmt(r.adj_g, 1)}</span>` : "" },
-    { h: "Lab", k: "lab_state", f: r => `<span class="tag ${tagFor(r.lab_state)}">${esc(r.lab_state)}</span>` + (r.is_on_hold ? ` <span class="tag bad">hold</span>` : "") }, { h: "Packaged", k: "packaged_date" }, { h: "Status", k: "status" }],
-    rows, { click: r => openPkg(r.label) });
+    { h: "Lab", k: "lab_state", f: r => `<span class="tag ${tagFor(r.lab_state)}">${esc(r.lab_state)}</span>` + (r.is_on_hold ? ` <span class="tag bad">hold</span>` : "") }, { h: "Packaged", k: "packaged_date" }, { h: "Status", k: "status" },
+    { h: "Vendor", k: "received_from", hide: 1 }, { h: "Origin license", k: "received_from_license", hide: 1 }, { h: "Received manifest", k: "received_manifest", hide: 1 }, { h: "Received", k: "received_date", hide: 1 },
+    { h: "Strain", k: "strain", hide: 1 }, { h: "Harvest", k: "harvest", hide: 1 }, { h: "Location", k: "location", hide: 1 }, { h: "Original qty", k: "orig_qty", n: 1, hide: 1, f: r => r.orig_qty == null ? "" : fmt(r.orig_qty, 2) + " " + esc(r.uom) },
+    { h: "Biomass $/lb", k: "cost_per_lb", n: 1, hide: 1, f: r => r.cost_per_lb == null ? "" : fmt(r.cost_per_lb, 2) }, { h: "Type", k: "kind", hide: 1 }],
+    rows, { click: r => openPkg(r.label), key: "inventory" });
 } catch (e) { fail("itable", e); } };
 
 const T = { rows: [], b: "awaiting" };
@@ -378,8 +408,7 @@ function renderT() { const q = $("tq").value.toLowerCase(), lic = $("tlic").valu
   $("tk").querySelectorAll(".kpi").forEach(d => d.onclick = () => { T.b = d.dataset.b; renderT(); });
   grid("ttable", [{ h: "Tag", k: "label", f: r => lblLink(r.label) }, { h: "Item", k: "item_name" }, { h: "License", k: "license" }, { h: "Qty", k: "quantity", n: 1, f: r => fmt(r.quantity, 2) + " " + esc(r.uom) },
     { h: "Lab status", k: "lab_state", f: r => `<span class="tag ${tagFor(r.lab_state)}">${esc(r.lab_state)}</span>` + (r.failed_tests ? `<div class="muted" style="font-size:12px">${esc(r.failed_tests)}</div>` : "") },
-    { h: "Status date", k: "lab_state_date" }, { h: "Packaged", k: "packaged_date" }, { h: "COA", k: "coa_doc_id", f: r => r.coa_doc_id ? `<button class="b" data-coa="${r.coa_doc_id}">COA</button>` : `<span class="muted">—</span>` }],
-    T.rows.filter(r => r.bucket === T.b && (!lic || r.license === lic) && (!q || [r.label, r.item_name, r.license].join(" ").toLowerCase().includes(q)))); }
+    { h: "Status date", k: "lab_state_date" }, { h: "Packaged", k: "packaged_date" }, { h: "COA", k: "coa_doc_id", f: r => r.coa_doc_id ? `<button class="b" data-coa="${r.coa_doc_id}">COA</button>` : `<span class="muted">—</span>` }, { h: "Category", k: "category", hide: 1 }, { h: "Package status", k: "status", hide: 1 }, { h: "Source packages", k: "source_package_labels", hide: 1 }], T.rows.filter(r => r.bucket === T.b && (!lic || r.license === lic) && (!q || [r.label, r.item_name, r.license].join(" ").toLowerCase().includes(q))), { key: "testing" }); }
 loaders.testing = async () => { $("ttable").textContent = "Loading…"; try { T.rows = await api("testing"); $("tlic").innerHTML = `<option value="">All licenses</option>` + [...new Set(T.rows.map(r => r.license))].sort().map(l => `<option>${l}</option>`).join(""); renderT(); } catch (e) { fail("ttable", e); } };
 $("tq").oninput = renderT; $("tlic").onchange = renderT;
 
@@ -395,7 +424,7 @@ function renderX() { const lic = $("xlic").value, q = $("xq").value.toLowerCase(
   $("xtable").innerHTML = `<div><div class="stat"><b>${rows.length}</b><span>manifests</span></div><div class="stat"><b>${fmt(t, 2)}</b><span>lbs shipped</span></div><div class="stat"><b>$${fmt(rows.reduce((a, r) => a + (+r.shipper_total || 0), 0), 2)}</b><span>shipper $</span></div></div><div id="xt2"></div>`;
   grid("xt2", [{ h: "Manifest", k: "manifest_number", f: r => mfLink(r.transfer_id, r.manifest_number) }, { h: "Shipper", k: "shipper_name" }, { h: "To", k: "license" }, { h: "Invoice", k: "invoice_number" }, { h: "Created", k: "created_at", f: r => esc((r.created_at || "").slice(0, 10)) },
     { h: "Received", k: "received_at", f: r => r.received_at ? esc(r.received_at.slice(0, 10)) : `<span class="tag warn">pending</span>` }, { h: "Pkgs", k: "package_count", n: 1 },
-    { h: "Shipped lbs", k: "shipped_lb", n: 1, f: r => fmt(r.shipped_lb, 3) + (r.has_unconverted ? " *" : "") }, { h: "Received lbs", k: "received_lb", n: 1, f: r => fmt(r.received_lb, 3) }, { h: "Shipper $", k: "shipper_total", n: 1, f: r => r.shipper_total == null ? "" : fmt(r.shipper_total, 2) }, { h: "$/lb", k: "price_per_lb", n: 1, f: r => r.price_per_lb == null ? "" : fmt(r.price_per_lb, 2) }], rows, { click: openManifest }); }
+    { h: "Shipped lbs", k: "shipped_lb", n: 1, f: r => fmt(r.shipped_lb, 3) + (r.has_unconverted ? " *" : "") }, { h: "Received lbs", k: "received_lb", n: 1, f: r => fmt(r.received_lb, 3) }, { h: "Shipper $", k: "shipper_total", n: 1, f: r => r.shipper_total == null ? "" : fmt(r.shipper_total, 2) }, { h: "$/lb", k: "price_per_lb", n: 1, f: r => r.price_per_lb == null ? "" : fmt(r.price_per_lb, 2) }, { h: "Shipper license", k: "shipper_license", hide: 1 }, { h: "Est. arrival", k: "est_arrival", hide: 1, f: r => esc((r.est_arrival || "").slice(0, 10)) }, { h: "Receiver $", k: "receiver_total", n: 1, hide: 1, f: r => r.receiver_total == null ? "" : fmt(r.receiver_total, 2) }, { h: "Received g", k: "received_g", n: 1, hide: 1, f: r => fmt(r.received_g, 1) }], rows, { key: "incoming", click: openManifest }); }
 loaders.xfer = async () => { $("xtable").textContent = "Loading…"; try { X.rows = await feed("transfers " + $("xdays").value); $("xlic").innerHTML = `<option value="">All licenses</option>` + [...new Set(X.rows.map(r => r.license))].sort().map(l => `<option>${l}</option>`).join(""); renderX(); } catch (e) { fail("xtable", e); } };
 ["xlic"].forEach(id => $(id).onchange = renderX); $("xq").oninput = renderX; $("xdays").onchange = loaders.xfer;
 const toG = (q, u, w) => { if (q == null) return null; u = (u || "").toLowerCase(); return u.startsWith("gram") || u === "g" ? q : u.startsWith("kilo") || u === "kg" ? q * 1000 : u.startsWith("pound") || u === "lb" ? q * 453.592 : u.startsWith("ounce") || u === "oz" ? q * 28.3495 : (u.startsWith("each") || u === "ea") && w ? q * w : null; };
@@ -426,7 +455,7 @@ loaders.yield = async () => { $("ytable").textContent = "Loading…"; try {
       { h: "Biomass $/lb", k: "biomass_per_lb", n: 1, f: r => r.biomass_per_lb == null ? "" : fmt(r.biomass_per_lb, 2) }, { h: "Biomass $ (est)", k: "biomass_cost", n: 1, f: r => r.biomass_cost == null ? "" : fmt(r.biomass_cost, 0) },
       { h: "Biomass $ / g out", k: "biomass_per_g_out", n: 1, f: r => r.biomass_per_g_out == null ? `<span class="muted">no price</span>` : `<b>$${fmt(r.biomass_per_g_out, 3)}</b>` },
       { h: "Priced", k: "price_coverage_pct", n: 1, f: r => r.price_coverage_pct == null ? "" : `<span class="${r.price_coverage_pct < 90 ? "neg" : ""}">${fmt(r.price_coverage_pct, 0)}%</span>` }, { h: "Columns", k: "input_packages", n: 1 },
-      { h: "", k: "input_shared", f: r => r.input_shared ? `<span class="tag warn">shared</span>` : "" }], rows);
+      { h: "", k: "input_shared", f: r => r.input_shared ? `<span class="tag warn">shared</span>` : "" }], rows, { key: "yield_batches" });
     $("yt2").addEventListener("click", e => { const a = e.target.closest("[data-b]"); if (a) { $("iq").value = a.dataset.b; $("istat").value = "all"; show("inv"); loaders.inv(); } });
   } else {
     $("ynote").innerHTML = "Per crude lot (Decarbed Crude). <b>Crude yield</b> = crude ÷ the biomass package(s) it came from. <b>Distillate recovery</b> = Bulk Distillate ÷ crude. <b>Adj</b> columns use crude weight after adjustments (e.g. weighing corrections). Waste shows <i>shared</i> when one waste package collected several lots.";
@@ -436,7 +465,7 @@ loaders.yield = async () => { $("ytable").textContent = "Loading…"; try {
       { h: "Crude yield adj", k: "crude_yield_adj_pct", n: 1, f: r => r.crude_yield_adj_pct == null ? "" : fmt(r.crude_yield_adj_pct, 2) + "%" }, { h: "Dist. recovery", k: "distillate_recovery_pct", n: 1, f: r => r.distillate_recovery_pct == null ? "" : `<b>${fmt(r.distillate_recovery_pct, 1)}%</b>` },
       { h: "Recovery adj", k: "distillate_recovery_adj_pct", n: 1, f: r => r.distillate_recovery_adj_pct == null ? "" : fmt(r.distillate_recovery_adj_pct, 1) + "%" }, { h: "Dist ÷ biomass", k: "distillate_per_biomass_pct", n: 1, f: r => r.distillate_per_biomass_pct == null ? "" : fmt(r.distillate_per_biomass_pct, 2) + "%" },
       { h: "Biomass $/lb", k: "biomass_per_lb", n: 1, f: r => r.biomass_per_lb == null ? "" : fmt(r.biomass_per_lb, 2) }, { h: "Biomass $ / g crude", k: "biomass_per_g_crude", n: 1, f: r => r.biomass_per_g_crude == null ? "" : "$" + fmt(r.biomass_per_g_crude, 3) },
-      { h: "Biomass $ / g distillate", k: "biomass_per_g_distillate", n: 1, f: r => r.biomass_per_g_distillate == null ? "" : `<b>$${fmt(r.biomass_per_g_distillate, 3)}</b>` }, { h: "Priced", k: "price_coverage_pct", n: 1, f: r => r.price_coverage_pct == null ? "" : fmt(r.price_coverage_pct, 0) + "%" }], rows);
+      { h: "Biomass $ / g distillate", k: "biomass_per_g_distillate", n: 1, f: r => r.biomass_per_g_distillate == null ? "" : `<b>$${fmt(r.biomass_per_g_distillate, 3)}</b>` }, { h: "Priced", k: "price_coverage_pct", n: 1, f: r => r.price_coverage_pct == null ? "" : fmt(r.price_coverage_pct, 0) + "%" }], rows, { key: "yield_crude" });
   } } catch (e) { fail("ytable", e); } };
 
 $("kfrom").value = daysAgo(60); $("kto").value = iso(new Date()); $("kgo").onclick = () => loaders.pack();
@@ -448,7 +477,7 @@ function renderK() { const B = { all: r => true, var: r => Math.abs(+r.units_vs_
   const pc = v => v == null ? "" : `<span class="${Math.abs(v) > 5 ? "neg" : ""}">${fmt(v, 2)}%</span>`;
   grid("ktable", [{ h: "Bulk tag", k: "label", f: r => lblLink(r.label) }, { h: "Bulk item", k: "item_name" }, { h: "Last packaged", k: "last_pkg_date" }, { h: "Original g", k: "orig_g", n: 1, f: r => fmt(r.orig_g, 1) },
     { h: "Drawn g", k: "drawn_g", n: 1, f: r => fmt(r.drawn_g, 1) }, { h: "Packaged g", k: "pkg_g", n: 1, f: r => fmt(r.pkg_g, 1) }, { h: "Units", k: "units", n: 1, f: r => fmt(r.units) }, { h: "Pkgs", k: "n_pkg", n: 1 },
-    { h: "Units vs drawn", k: "units_vs_drawn_pct", n: 1, f: r => pc(r.units_vs_drawn_pct) }, { h: "Leftover", k: "leftover_pct", n: 1, f: r => pc(r.leftover_pct) }, { h: "Remaining g", k: "remaining_g", n: 1, f: r => fmt(r.remaining_g, 1) }, { h: "Status", k: "status" }], rows);
+    { h: "Units vs drawn", k: "units_vs_drawn_pct", n: 1, f: r => pc(r.units_vs_drawn_pct) }, { h: "Leftover", k: "leftover_pct", n: 1, f: r => pc(r.leftover_pct) }, { h: "Remaining g", k: "remaining_g", n: 1, f: r => fmt(r.remaining_g, 1) }, { h: "Status", k: "status" }], rows, { key: "packaging" });
 } catch (e) { fail("ktable", e); } };
 
 loaders.adj = async () => { $("atable").textContent = "Loading…"; try { const d = await feed("adjustments " + $("adays").value);
@@ -463,7 +492,7 @@ function renderA() { const F = A.d.flagged, B = { all: r => true, size: r => r.f
     A.f, k => { A.f = k; renderA(); });
   grid("atable", [{ h: "Date", k: "adjustment_date" }, { h: "Tag", k: "package_label", f: r => lblLink(r.package_label) }, { h: "Item", k: "item_name" }, { h: "License", k: "license" },
     { h: "Adjustment g", k: "grams", n: 1, f: r => `<b class="${r.grams < 0 ? "neg" : ""}">${fmt(r.grams, 1)}</b>` }, { h: "% of pkg", k: "pct_of_package", n: 1, f: r => r.pct_of_package == null ? "" : fmt(r.pct_of_package, 1) + "%" },
-    { h: "Reason", k: "reason" }, { h: "Note", k: "note" }, { h: "User", k: "adjusted_by" }, { h: "Flag", f: r => (r.flag_size ? `<span class="tag bad">≥1,000g</span> ` : "") + (r.flag_pct ? `<span class="tag warn">≥10%</span>` : "") }], F.filter(B[A.f] || B.all)); }
+    { h: "Reason", k: "reason" }, { h: "Note", k: "note" }, { h: "User", k: "adjusted_by" }, { h: "Flag", f: r => (r.flag_size ? `<span class="tag bad">≥1,000g</span> ` : "") + (r.flag_pct ? `<span class="tag warn">≥10%</span>` : "") }, { h: "Category", k: "category", hide: 1 }, { h: "Qty (METRC)", k: "quantity", n: 1, hide: 1, f: r => fmt(r.quantity, 2) + " " + esc(r.uom || "") }, { h: "Package original g", k: "package_orig_g", n: 1, hide: 1, f: r => fmt(r.package_orig_g, 1) }], F.filter(B[A.f] || B.all), { key: "adjustments" }); }
 
 const AU = { rows: [] };
 function renderAU() { const s = $("asrc").value, f = $("afind").value, q = $("aq").value.toLowerCase();
@@ -472,8 +501,7 @@ function renderAU() { const s = $("asrc").value, f = $("afind").value, q = $("aq
   grid("audtable", [{ h: "Source", k: "src" }, { h: "App name", k: "name" }, { h: "App #", k: "metrc_number" }, { h: "Batch", k: "batch" }, { h: "App status", k: "app_status" },
     { h: "App qty", k: "app_qty", n: 1, f: r => fmt(r.app_qty, 1) + " " + esc(r.app_uom) }, { h: "METRC tag", k: "label", f: r => lblLink(r.label) }, { h: "METRC item", k: "metrc_item" },
     { h: "METRC qty", k: "metrc_qty", n: 1, f: r => r.metrc_qty == null ? "" : fmt(r.metrc_qty, 1) + " " + esc(r.metrc_uom) }, { h: "Diff", k: "diff", n: 1, f: r => r.diff == null ? "" : `<b class="${+r.diff ? "neg" : ""}">${fmt(r.diff, 1)}</b>` },
-    { h: "Finding", k: "finding", f: r => `<span class="tag ${r.finding === "qty mismatch" ? "bad" : "warn"}">${esc(r.finding)}</span>` }, { h: "METRC status", k: "metrc_status" }],
-    AU.rows.filter(r => (!s || r.src === s) && (!f || r.finding === f) && (!q || [r.name, r.metrc_number, r.batch, r.label, r.metrc_item].join(" ").toLowerCase().includes(q)))); }
+    { h: "Finding", k: "finding", f: r => `<span class="tag ${r.finding === "qty mismatch" ? "bad" : "warn"}">${esc(r.finding)}</span>` }, { h: "METRC status", k: "metrc_status" }], AU.rows.filter(r => (!s || r.src === s) && (!f || r.finding === f) && (!q || [r.name, r.metrc_number, r.batch, r.label, r.metrc_item].join(" ").toLowerCase().includes(q))), { key: "audit" }); }
 loaders.audit = async () => { $("audtable").textContent = "Loading…"; try { const d = await api("audit"); AU.rows = d.rows;
   $("anote").innerHTML = `Non-archived N1 app batches (concentrate, vape, flower) matched to METRC by the app's METRC # (last 5 digits of the tag). N1 app snapshot: <b>${d.snapshot_at ? new Date(d.snapshot_at).toLocaleString() : "—"}</b>. 4g concentrate and vapes are compared in units. "Not in METRC data" can also mean the tag went inactive before 2026, which isn't synced.`;
   $("afind").innerHTML = `<option value="">All findings</option>` + [...new Set(AU.rows.map(r => r.finding))].map(x => `<option>${esc(x)}</option>`).join(""); renderAU();
@@ -585,8 +613,7 @@ function renderEx() {
     { h: "Dest. type", k: "destination_type" }, { h: "Type", k: "type_raw" }, { h: "Category", k: "category" }, { h: "Rcv'd lb", k: "received_lb", n: 1, f: r => fmt(r.received_lb, 4) },
     { h: "Shipper $", k: "shipper_price", n: 1, f: r => r.shipper_price == null ? "" : fmt(r.shipper_price, 2) }, { h: "Method", k: "method" }, { h: "AMR", k: "amr_rate", n: 1, f: r => r.amr_rate ? `$${fmt(r.amr_rate)}/${esc(r.amr_unit)}` : "" },
     { h: "Taxable value", k: "taxable_value", n: 1, f: r => fmt(r.taxable_value, 2) }, { h: "CO 15%", k: "colorado_tax", n: 1, f: r => fmt(r.colorado_tax, 2) }, { h: "Pueblo 5%", k: "pueblo_tax", n: 1, f: r => fmt(r.pueblo_tax, 2) },
-    { h: "Status", k: "status", f: r => `<span class="tag ${r.status === "Taxable" ? "ok" : /^STOP/.test(r.status) ? "bad" : "warn"}">${esc(r.status)}</span>` }, { h: "Flags", k: "flags", f: r => r.flags ? `<span class="neg" style="font-size:12px">${esc(r.flags)}</span>` : "" }],
-    ALL ? R : inP);
+    { h: "Status", k: "status", f: r => `<span class="tag ${r.status === "Taxable" ? "ok" : /^STOP/.test(r.status) ? "bad" : "warn"}">${esc(r.status)}</span>` }, { h: "Flags", k: "flags", f: r => r.flags ? `<span class="neg" style="font-size:12px">${esc(r.flags)}</span>` : "" }, { h: "Origin license", k: "origin_license", hide: 1 }, { h: "Dest. license", k: "recipient_license", hide: 1 }, { h: "Created", k: "created_date", hide: 1 }, { h: "Shipped", k: "shipped_qty", n: 1, hide: 1, f: r => fmt(r.shipped_qty, 2) + " " + esc(r.shipped_uom || "") }, { h: "Receiver $", k: "receiver_price", n: 1, hide: 1, f: r => r.receiver_price == null ? "" : fmt(r.receiver_price, 2) }, { h: "AMR category", k: "amr_category", hide: 1 }, { h: "AMR quarter", k: "amr_quarter_start", hide: 1 }], ALL ? R : inP, { key: "excise" });
 }
 $("exper").onchange = () => loaders.excise($("exper").value);
 // "show all periods": fetch every month's lines (totals/reconciliation stay on the selected month)
@@ -694,7 +721,7 @@ function renderOut() { const q = $("oq").value.toLowerCase(), ty = $("otype").va
   grid("otable", [{ h: "Manifest", k: "manifest_number", f: r => mfLink(r.transfer_id, r.manifest_number) }, { h: "From", k: "license" }, { h: "To", k: "recipient_name" }, { h: "To license", k: "recipient_license" }, { h: "Dest. type", k: "destination_type" },
     { h: "Type", k: "shipment_type" }, { h: "Created", k: "created_at", f: r => esc((r.created_at || "").slice(0, 10)) }, { h: "Received", k: "received_at", f: r => r.received_at ? esc(r.received_at.slice(0, 10)) : `<span class="tag warn">pending</span>` },
     { h: "Pkgs", k: "pkgs_loaded", n: 1 }, { h: "Lbs", k: "shipped_lb", n: 1, f: r => fmt(r.shipped_lb, 3) }, { h: "Units", k: "shipped_units", n: 1, f: r => fmt(r.shipped_units) }, { h: "Shipper $", k: "shipper_total", n: 1, f: r => r.shipper_total == null ? "" : fmt(r.shipper_total, 2) },
-    { h: "", k: "rejected_pkgs", f: r => r.rejected_pkgs ? `<span class="tag bad">${r.rejected_pkgs} rejected</span>` : "" }], rows, { click: r => openManifestById(r.transfer_id) });
+    { h: "", k: "rejected_pkgs", f: r => r.rejected_pkgs ? `<span class="tag bad">${r.rejected_pkgs} rejected</span>` : "" }, { h: "Transaction", k: "transaction_type", hide: 1 }, { h: "Invoice", k: "invoice_number", hide: 1 }, { h: "Received lbs", k: "received_lb", n: 1, hide: 1, f: r => fmt(r.received_lb, 3) }, { h: "Receiver $", k: "receiver_total", n: 1, hide: 1, f: r => r.receiver_total == null ? "" : fmt(r.receiver_total, 2) }, { h: "Categories", k: "categories", hide: 1 }], rows, { key: "outgoing", click: r => openManifestById(r.transfer_id) });
 }
 $("ogo").onclick = loaders.out; $("olic").onchange = loaders.out; $("oq").oninput = renderOut; $("otype").onchange = renderOut;
 $("ocsv").onclick = () => download(`Outgoing_Manifests_${$("ofrom").value}_${$("oto").value}.csv`, toCSV(OUT.view || [], [["Manifest", "manifest_number"], ["From license", "license"], ["To", "recipient_name"], ["To license", "recipient_license"], ["Destination type", "destination_type"],
@@ -824,7 +851,7 @@ async function wlLoad() {
     { h: "Batch", k: "batch" }, { h: "Last manifest", k: "last_manifest", f: r => r.last_manifest ? `${mfLink(r.last_transfer_id, r.last_manifest)} <span class="muted">${esc(r.last_manifest_dir)} ${esc((r.last_manifest_at || "").slice(0, 10))}</span>` : "" },
     { h: "Biomass $/lb", k: "cost_per_lb", n: 1, f: r => r.cost_per_lb == null ? "" : fmt(r.cost_per_lb, 2) },
     { h: "Note", k: "note", f: r => `<input class="wln" data-l="${esc(r.label)}" value="${esc(r.note || "")}" placeholder="note…" style="width:180px;padding:3px 6px">` },
-    { h: "", f: r => `<button class="b wlrm" data-l="${esc(r.label)}" style="padding:1px 8px" title="Remove from list">✕</button>` }], WL.items);
+    { h: "", f: r => `<button class="b wlrm" data-l="${esc(r.label)}" style="padding:1px 8px" title="Remove from list">✕</button>` }, { h: "Original qty", k: "orig_qty", n: 1, hide: 1, f: r => r.orig_qty == null ? "" : fmt(r.orig_qty, 2) + " " + esc(r.uom || "") }, { h: "Packaged", k: "packaged_date", hide: 1 }, { h: "Added", k: "added_at", hide: 1, f: r => esc((r.added_at || "").slice(0, 10)) }], WL.items, { key: "lists" });
   $("wltable").onchange = async e => { const i = e.target.closest(".wln"); if (i) await wl("note", { id: WL.cur, label: i.dataset.l, note: i.value }); };
   $("wltable").onclick = async e => { const b = e.target.closest(".wlrm"); if (b) { await wl("remove", { id: WL.cur, label: b.dataset.l }); await wlRefreshLists(); wlLoad(); } };
 }
