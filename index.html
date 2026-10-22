@@ -317,7 +317,17 @@ async function openPkg(label) {
       ["Received from", p.received_from ? `${p.received_from} · manifest ${p.received_manifest}` : ""], ["Note", p.Note]];
     let m = r.cost ? `<div class="stat"><b>$${fmt(r.cost.cost_g * 453.59237, 2)}/lb</b><span>${r.cost.depth == 0 ? "purchase price" : "biomass cost traced through " + r.cost.depth + " generation(s)"} · $${fmt(r.cost.cost_g, 3)}/g${r.cost.coverage < 0.999 ? ` · ${fmt(100 * r.cost.coverage, 0)}% of source weight priced` : ""}</span></div>` : "";
     if (parentsG && orig && p.uom === "g") m += `<div class="stat"><b>${fmt(100 * orig / parentsG, 2)}%</b><span>of source weight (${fmt(orig, 1)}g from ${fmt(parentsG, 1)}g)</span></div>`;
-    if (childG && orig && p.uom === "g") m += `<div class="stat"><b>${fmt(100 * childG / orig, 2)}%</b><span>went into ${r.children.length} packages (${fmt(childG, 1)}g)</span></div>`;
+    const D = r.draw;
+    if (D && orig && p.uom === "g" && r.children.length) {
+      const sh = D.shared || [], shG = sh.reduce((a, x) => a + (+x.orig_g || 0), 0), left = (+D.drawn_g || 0) - (+D.sole_g || 0);
+      if (!sh.length) m += `<div class="stat"><b>${fmt(100 * D.sole_g / orig, 2)}%</b><span>went into ${D.sole_n} package(s) made only from this one (${fmt(D.sole_g, 1)}g)</span></div>`;
+      else {
+        m += `<div class="stat"><b>${fmt(D.sole_g, 1)}g</b><span>into ${D.sole_n} package(s) made only from this one</span></div>
+          <div class="stat"><b>≈ ${fmt(Math.max(0, Math.min(left, shG)), 1)}g</b><span>into ${sh.length} shared package(s) — by balance (drawn ${fmt(D.drawn_g, 1)}g − solo ${fmt(D.sole_g, 1)}g)</span></div>
+          <div class="note">Shared with other sources — METRC doesn't record how many grams each source put in, so this package's share is worked out by mass balance:
+          ${sh.map(x => `${lblLink(x.label)} ${fmt(x.orig_g, 0)}g, also from ${esc(x.others_items || "")}`).join(" · ")}${left > shG + 1 ? ` <span class="neg">· ${fmt(left - shG, 1)}g drawn but not in any synced package</span>` : ""}${left < -1 ? ` <span class="neg">· solo packages exceed what was drawn by ${fmt(-left, 1)}g</span>` : ""}</div>`;
+      }
+    }
     $("pb").innerHTML = `<div class="kv">${kv.map(([k, v]) => `<div>${esc(k)}</div><div>${esc(v ?? "")}</div>`).join("")}</div>${m}` +
       (docs.length ? `<div style="margin:8px 0">${docs.map(x => `<button class="b" data-coa="${x}">Open COA ${x}</button>`).join(" ")}</div>` : "") +
       `<h3>Lineage — back to original biomass / purchase</h3>${lineageHtml(r.lineage)}<h3>Made from this (${r.children.length})</h3><div id="pb2"></div><h3>Adjustments (${r.adjustments.length})</h3><div id="pb3"></div><h3>Lab results (${r.lab_results.length})</h3><div id="pb4"></div>` + trHtml;
