@@ -711,16 +711,22 @@ function lineageHtml(L) {
     const cost = n.depth > 0 && n.cost_per_lb != null && !n.received_from ? ` <span class="muted" style="font-size:12px">· biomass $${fmt(n.cost_per_lb, 2)}/lb</span>` : "";
     return `${lblLink(n.label)} ${metrcBtn(n.label, n.license)} <button class="b" data-addlist="${esc(n.label)}" style="padding:1px 8px;font-size:11px">+ List</button> <b>${esc(n.item_name || "")}</b> <span class="muted">${esc(n.category || "")} · ${qty} · ${esc(n.packaged_date || "")} · ${esc(n.license || "")}</span>${cost}${org}`;
   };
-  const seen = new Set();
-  const node = (n, d) => {
-    const ch = (kids[n.label] || []).filter(c => !seen.has(c.label + "<" + n.label));
-    ch.forEach(c => seen.add(c.label + "<" + n.label));
-    if (!ch.length) return `<div class="leaf">${line(n)}</div>`;
-    return `<details ${d < 3 ? "open" : ""}><summary>${line(n)} <span class="muted">(${ch.length} source${ch.length > 1 ? "s" : ""})</span></summary>${ch.map(c => node(c, d + 1)).join("")}</details>`;
-  };
-  const origins = L.filter(n => n.depth > 0 && (n.received_from || !n.has_parents));
+  // bottom-up: start at the original biomass / purchases and flow forward, generation by generation, to this package
+  const byLabel = {};
+  L.forEach(n => { const b = byLabel[n.label] = byLabel[n.label] || { ...n, into: new Set(), depth: n.depth }; b.depth = Math.max(b.depth, n.depth); if (n.parent_of) b.into.add(n.parent_of); });
+  const nodes = Object.values(byLabel), maxD = Math.max(...nodes.map(n => n.depth));
+  const short = l => "…" + String(l).slice(-6);
+  const gens = [];
+  for (let d = maxD; d >= 0; d--) {
+    const g = nodes.filter(n => n.depth === d).sort((a, b) => String(a.packaged_date || "").localeCompare(String(b.packaged_date || "")));
+    if (!g.length) continue;
+    const title = d === 0 ? "This package" : d === maxD ? `Generation ${maxD - d + 1} · origin` : `Generation ${maxD - d + 1}`;
+    const rows = g.map(n => `<div class="leaf" style="margin-left:0">${line(n)}${n.into.size && d > 0 ? ` <span class="muted" style="font-size:12px">↓ into ${[...n.into].map(x => `<a class="lk lbl" data-label="${esc(x)}">${short(x)}</a>`).join(", ")}</span>` : ""}</div>`).join("");
+    gens.push(`<details ${d === 0 || d === maxD || g.length <= 6 ? "open" : ""} style="margin-left:0;border-left:0;padding-left:0"><summary><b>${title}</b> <span class="muted">(${g.length} package${g.length > 1 ? "s" : ""})</span></summary><div style="margin:2px 0 6px 14px;border-left:2px solid ${d === 0 ? "var(--cyan)" : "var(--purple)"};padding-left:10px">${rows}</div></details>` + (d > 0 ? `<div style="margin:0 0 4px 22px;color:var(--purple);font-size:16px">↓</div>` : ""));
+  }
+  const origins = nodes.filter(n => n.depth > 0 && (n.received_from || !n.has_parents));
   const byOrigin = {}; origins.forEach(n => { const k = n.received_from ? `${n.received_from} (${n.received_license})` : `Grown · ${n.harvest || "unknown harvest"}`; byOrigin[k] = byOrigin[k] || { k, n: 0, g: 0, $: 0 }; byOrigin[k].n++; byOrigin[k].g += +n.orig_g || 0; byOrigin[k].$ += +n.price || 0; });
-  return `<div class="note">${origins.length} origin package(s): ${Object.values(byOrigin).map(o => `<b>${esc(o.k)}</b> — ${o.n} pkg, ${fmt(o.g / 453.59237, 2)} lbs${o.$ ? `, $${fmt(o.$, 2)}` : ""}`).join(" · ")}</div><div class="tree">${node(root, 0)}</div>`;
+  return `<div class="note">${origins.length} origin package(s): ${Object.values(byOrigin).map(o => `<b>${esc(o.k)}</b> — ${o.n} pkg, ${fmt(o.g / 453.59237, 2)} lbs${o.$ ? `, $${fmt(o.$, 2)}` : ""}`).join(" · ")}. Read top to bottom: original biomass → … → this package.</div><div class="tree">${gens.join("")}</div>`;
 }
 
 
