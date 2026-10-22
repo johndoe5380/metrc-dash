@@ -173,26 +173,26 @@ nav{top:var(--hh,62px)}
 <button class="b" data-r="7">7D</button><button class="b" data-r="30">30D</button><button class="b" data-r="90">90D</button><button class="b" data-r="ytd">YTD</button></div>
 <div id="pstats"></div><div class="chart"><canvas id="pchart"></canvas></div><div id="ptable"></div></section>
 
-<section id="inv" class="tab"><h2>Inventory</h2><div class="note">All synced packages. Click any row for metrics: source and child packages, yield, adjustments, lab results and COA.</div>
+<section id="inv" class="tab"><h2>Inventory</h2><div class="kpis" id="ik"></div><div class="note">All synced packages. Click any row for metrics: source and child packages, yield, adjustments, lab results and COA.</div>
 <div class="tools"><select id="istat"><option value="active">Active</option><option value="onhold">On hold</option><option value="inactive">Inactive</option><option value="all">All</option></select><select id="ilic"><option value="">All licenses</option></select><select id="icat"><option value="">All categories</option></select><input id="iq" placeholder="Search — any words: tag, name, strain, type, batch, vendor, location…" size="44"><button class="b" id="igo">Search</button></div><div id="itable"></div></section>
 
 <section id="testing" class="tab"><h2>Testing</h2><div class="kpis" id="tk"></div><div class="tools"><input id="tq" placeholder="Filter…"><select id="tlic"></select></div><div id="ttable"></div></section>
 
-<section id="xfer" class="tab"><h2>Incoming Transfers</h2><div class="note">Manifests received into N1 licenses with weight totals in lbs. Click a manifest for package-level weights and a copy button.</div>
-<div class="tools"><select id="xdays"><option value="14">14 days</option><option value="30" selected>30 days</option><option value="60">60 days</option><option value="120">120 days</option></select><label><input type="checkbox" id="xself"> include N1→N1 / returns</label><label><input type="checkbox" id="xpend"> not yet received only</label><select id="xlic"></select><input id="xq" placeholder="Shipper, manifest, invoice…"></div><div id="xtable"></div></section>
+<section id="xfer" class="tab"><h2>Incoming Transfers</h2><div class="kpis" id="xk"></div><div class="note">Manifests received into N1 licenses with weight totals in lbs. Click a manifest for package-level weights and a copy button.</div>
+<div class="tools"><select id="xdays"><option value="14">14 days</option><option value="30" selected>30 days</option><option value="60">60 days</option><option value="120">120 days</option></select><select id="xlic"></select><input id="xq" placeholder="Shipper, manifest, invoice…"></div><div id="xtable"></div></section>
 
-<section id="out" class="tab"><h2>Outgoing Manifests</h2><div class="note">Outbound transfers from every N1 license. Click a manifest for the summary, per-package detail, the METRC manifest PDF (view or download) and a CSV.</div>
+<section id="out" class="tab"><h2>Outgoing Manifests</h2><div class="kpis" id="ok2"></div><div class="note">Outbound transfers from every N1 license. Click a manifest for the summary, per-package detail, the METRC manifest PDF (view or download) and a CSV.</div>
 <div class="tools"><input type="date" id="ofrom"><input type="date" id="oto"><select id="olic"><option value="">All licenses</option><option>404R-00220</option><option>404-00561</option><option>404R-00301</option><option>403R-00713</option><option>403-01881</option></select><select id="otype"></select><input id="oq" placeholder="Manifest, destination, invoice…"><button class="b" id="ogo">Apply</button><button class="b" id="ocsv">Download list CSV</button></div><div id="ostats"></div><div id="otable"></div></section>
 <section id="yield" class="tab"><h2>Yields</h2><div class="tools"><button class="b on" id="yb1">Concentrate batches</button><button class="b" id="yb2">Crude → Distillate</button><input type="date" id="yfrom"><input type="date" id="yto"><button class="b" id="ygo">Apply</button></div>
 <div id="ynote" class="note"></div><div id="ytable"></div></section>
 
 <section id="pack" class="tab"><h2>Packaging Variance</h2><div class="note"><b>Units vs drawn</b> = (packaged units × unit weight − grams drawn from bulk) ÷ grams drawn. Vape runs read about +5–6% because nominal fill includes terpene. <b>Leftover</b> = grams adjusted off the bulk package ÷ its original weight. Draws METRC can't attribute (e.g. lab samples) show as large negatives.</div>
-<div class="tools"><input type="date" id="kfrom"><input type="date" id="kto"><button class="b" id="kgo">Apply</button></div><div id="ktable"></div></section>
+<div class="tools"><input type="date" id="kfrom"><input type="date" id="kto"><button class="b" id="kgo">Apply</button></div><div class="kpis" id="kk"></div><div id="ktable"></div></section>
 
 <section id="adj" class="tab"><h2>Adjustments</h2><div class="tools"><select id="adays"><option value="7">7 days</option><option value="30">30 days</option><option value="60" selected>60 days</option><option value="120">120 days</option><option value="300">Since Jan</option></select><span class="muted">Flag = |adjustment| ≥ 1,000g or ≥ 10% of the package's original weight</span></div>
-<div id="asum"></div><div id="atable"></div><h3>Activity by user <span class="muted" style="text-transform:none;letter-spacing:0;font-weight:500">· click a user</span></h3><div class="note">METRC's API names the user on adjustments only; a full action log by badge still requires the METRC web UI.</div><div id="auser"></div></section>
+<div id="asum"></div><div class="kpis" id="ak"></div><div id="atable"></div><h3>Activity by user <span class="muted" style="text-transform:none;letter-spacing:0;font-weight:500">· click a user</span></h3><div class="note">METRC's API names the user on adjustments only; a full action log by badge still requires the METRC web UI.</div><div id="auser"></div></section>
 
-<section id="audit" class="tab"><h2>N1 App vs METRC</h2><div class="note" id="anote"></div><div class="tools"><select id="asrc"><option value="">All sources</option><option>concentrate</option><option>vape</option><option>flower</option></select><select id="afind"><option value="">All findings</option></select><input id="aq" placeholder="Name, tag, batch…"></div><div id="audsum"></div><div id="audtable"></div></section>
+<section id="audit" class="tab"><h2>N1 App vs METRC</h2><div class="note" id="anote"></div><div class="tools"><select id="asrc"><option value="">All sources</option><option>concentrate</option><option>vape</option><option>flower</option></select><select id="afind"><option value="">All findings</option></select><input id="aq" placeholder="Name, tag, batch…"></div><div class="kpis" id="audk"></div><div id="audtable"></div></section>
 
 <section id="excise" class="tab"><h2>Excise Tax · 403R-00713</h2><div class="note">Outbound transfers from 403R-00713, assigned to the month they were <b>received</b>, calculated per <i>Next1 Labs — Monthly Marijuana Excise Tax Calculation</i>: Colorado 15% · Pueblo County 5%; contract price (Shipper Dollar Amount) for unaffiliated, AMR × received lbs for affiliated; extraction rate on AMR transfers to a Retail MIP (flagged); rejected/returned and unreceived excluded and flagged; unknown values stop. Each line rounded to cents. Destination type comes from the destination license prefix.</div>
 <div class="tools"><select id="exper"></select><label title="Totals, reconciliation, lines and both CSVs cover every month, with a by-month table"><input type="checkbox" id="exall"> show all periods</label><button class="b" id="excsv">Download line CSV</button><button class="b" id="exsumcsv">Download summary CSV</button></div>
@@ -310,7 +310,10 @@ async function openSku(item, args) {
 
 $("igo").onclick = () => loaders.inv(); $("iq").onkeydown = e => { if (e.key === "Enter") loaders.inv(); };
 ["istat", "ilic", "icat"].forEach(id => $(id).onchange = () => loaders.inv());
-loaders.inv = async () => { loaded.inv = 1; $("itable").textContent = "Loading…"; try {
+loaders.inv = async () => { loaded.inv = 1; $("itable").textContent = "Loading…";
+  api("inv_counts", { license: $("ilic").value, category: $("icat").value }).then(c => bucketCards("ik", [{ key: "active", label: "Active", n: c.active }, { key: "onhold", label: "On hold", n: c.onhold }, { key: "inactive", label: "Inactive (2026)", n: c.inactive }, { key: "all", label: "All", n: c.all }],
+    $("istat").value, k => { $("istat").value = k; loaders.inv(); })).catch(() => {});
+  try {
   const rows = await api("inventory", { status: $("istat").value, license: $("ilic").value, category: $("icat").value, q: $("iq").value.trim() });
   if ($("icat").options.length < 2) $("icat").innerHTML += [...new Set(rows.map(r => r.category).filter(Boolean))].sort().map(c => `<option>${esc(c)}</option>`).join("");
   const tg = rows.reduce((a, r) => a + (+r.qty_g || 0), 0);
@@ -335,16 +338,20 @@ loaders.testing = async () => { $("ttable").textContent = "Loading…"; try { T.
 $("tq").oninput = renderT; $("tlic").onchange = renderT;
 
 const X = { rows: [] };
-function renderX() { const self = $("xself").checked, lic = $("xlic").value, q = $("xq").value.toLowerCase();
-  const pend = $("xpend").checked;
-  const rows = X.rows.filter(r => (!pend || !r.received_at) && (self || r.shipper_license !== r.license) && (!lic || r.license === lic) && (!q || [r.manifest_number, r.shipper_name, r.invoice_number].join(" ").toLowerCase().includes(q)));
+X.f = "all";
+function renderX() { const lic = $("xlic").value, q = $("xq").value.toLowerCase();
+  const base = X.rows.filter(r => (!lic || r.license === lic) && (!q || [r.manifest_number, r.shipper_name, r.invoice_number].join(" ").toLowerCase().includes(q)));
+  const ext = r => r.shipper_license !== r.license, B = { all: r => ext(r), pending: r => ext(r) && !r.received_at, received: r => ext(r) && !!r.received_at, internal: r => !ext(r) };
+  bucketCards("xk", [{ key: "all", label: "From vendors", n: base.filter(B.all).length }, { key: "pending", label: "Not yet received", n: base.filter(B.pending).length }, { key: "received", label: "Received", n: base.filter(B.received).length }, { key: "internal", label: "N1 → N1 / returns", n: base.filter(B.internal).length }],
+    X.f, k => { X.f = k; renderX(); });
+  const rows = base.filter(B[X.f] || B.all);
   const t = rows.reduce((a, r) => a + (+r.shipped_lb || 0), 0);
   $("xtable").innerHTML = `<div><div class="stat"><b>${rows.length}</b><span>manifests</span></div><div class="stat"><b>${fmt(t, 2)}</b><span>lbs shipped</span></div><div class="stat"><b>$${fmt(rows.reduce((a, r) => a + (+r.shipper_total || 0), 0), 2)}</b><span>shipper $</span></div></div><div id="xt2"></div>`;
   grid("xt2", [{ h: "Manifest", k: "manifest_number", f: r => mfLink(r.transfer_id, r.manifest_number) }, { h: "Shipper", k: "shipper_name" }, { h: "To", k: "license" }, { h: "Invoice", k: "invoice_number" }, { h: "Created", k: "created_at", f: r => esc((r.created_at || "").slice(0, 10)) },
     { h: "Received", k: "received_at", f: r => r.received_at ? esc(r.received_at.slice(0, 10)) : `<span class="tag warn">pending</span>` }, { h: "Pkgs", k: "package_count", n: 1 },
     { h: "Shipped lbs", k: "shipped_lb", n: 1, f: r => fmt(r.shipped_lb, 3) + (r.has_unconverted ? " *" : "") }, { h: "Received lbs", k: "received_lb", n: 1, f: r => fmt(r.received_lb, 3) }, { h: "Shipper $", k: "shipper_total", n: 1, f: r => r.shipper_total == null ? "" : fmt(r.shipper_total, 2) }, { h: "$/lb", k: "price_per_lb", n: 1, f: r => r.price_per_lb == null ? "" : fmt(r.price_per_lb, 2) }], rows, { click: openManifest }); }
 loaders.xfer = async () => { $("xtable").textContent = "Loading…"; try { X.rows = await feed("transfers " + $("xdays").value); $("xlic").innerHTML = `<option value="">All licenses</option>` + [...new Set(X.rows.map(r => r.license))].sort().map(l => `<option>${l}</option>`).join(""); renderX(); } catch (e) { fail("xtable", e); } };
-["xself", "xlic", "xpend"].forEach(id => $(id).onchange = renderX); $("xq").oninput = renderX; $("xdays").onchange = loaders.xfer;
+["xlic"].forEach(id => $(id).onchange = renderX); $("xq").oninput = renderX; $("xdays").onchange = loaders.xfer;
 const toG = (q, u, w) => { if (q == null) return null; u = (u || "").toLowerCase(); return u.startsWith("gram") || u === "g" ? q : u.startsWith("kilo") || u === "kg" ? q * 1000 : u.startsWith("pound") || u === "lb" ? q * 453.592 : u.startsWith("ounce") || u === "oz" ? q * 28.3495 : (u.startsWith("each") || u === "ea") && w ? q * w : null; };
 async function openManifest(t) {
   const d = $("drawer"); d.classList.add("on"); d.innerHTML = `<span class="x" onclick="this.parentNode.classList.remove('on')">✕</span><h2>Manifest ${esc(t.manifest_number)}</h2><div class="muted">${esc(t.shipper_name)} → ${esc(t.license)} · invoice ${esc(t.invoice_number || "—")}</div><div id="mb">Loading…</div>`;
@@ -387,7 +394,11 @@ loaders.yield = async () => { $("ytable").textContent = "Loading…"; try {
   } } catch (e) { fail("ytable", e); } };
 
 $("kfrom").value = daysAgo(60); $("kto").value = iso(new Date()); $("kgo").onclick = () => loaders.pack();
-loaders.pack = async () => { $("ktable").textContent = "Loading…"; try { const rows = await api("packaging", { from: $("kfrom").value, to: $("kto").value });
+const K = { rows: [], f: "all" };
+loaders.pack = async () => { $("ktable").textContent = "Loading…"; try { K.rows = await api("packaging", { from: $("kfrom").value, to: $("kto").value }); renderK(); } catch (e) { fail("ktable", e); } };
+function renderK() { const B = { all: r => true, var: r => Math.abs(+r.units_vs_drawn_pct || 0) > 5, left: r => (+r.leftover_pct || 0) > 2, open: r => r.status === "active" && (+r.remaining_g || 0) > 0 };
+  bucketCards("kk", [{ key: "all", label: "All bulk packages", n: K.rows.length }, { key: "var", label: "Units vs drawn > ±5%", n: K.rows.filter(B.var).length }, { key: "left", label: "Leftover > 2%", n: K.rows.filter(B.left).length }, { key: "open", label: "Still has bulk left", n: K.rows.filter(B.open).length }], K.f, k => { K.f = k; renderK(); });
+  const rows = K.rows.filter(B[K.f] || B.all); try {
   const pc = v => v == null ? "" : `<span class="${Math.abs(v) > 5 ? "neg" : ""}">${fmt(v, 2)}%</span>`;
   grid("ktable", [{ h: "Bulk tag", k: "label", f: r => lblLink(r.label) }, { h: "Bulk item", k: "item_name" }, { h: "Last packaged", k: "last_pkg_date" }, { h: "Original g", k: "orig_g", n: 1, f: r => fmt(r.orig_g, 1) },
     { h: "Drawn g", k: "drawn_g", n: 1, f: r => fmt(r.drawn_g, 1) }, { h: "Packaged g", k: "pkg_g", n: 1, f: r => fmt(r.pkg_g, 1) }, { h: "Units", k: "units", n: 1, f: r => fmt(r.units) }, { h: "Pkgs", k: "n_pkg", n: 1 },
@@ -396,15 +407,22 @@ loaders.pack = async () => { $("ktable").textContent = "Loading…"; try { const
 
 loaders.adj = async () => { $("atable").textContent = "Loading…"; try { const d = await feed("adjustments " + $("adays").value);
   $("asum").innerHTML = `<div class="stat"><b>${d.total}</b><span>adjustments</span></div><div class="stat"><b>${fmt(d.net_g, 1)}</b><span>net g</span></div><div class="stat"><b>${d.flagged.length}</b><span>flagged</span></div>`;
-  grid("atable", [{ h: "Date", k: "adjustment_date" }, { h: "Tag", k: "package_label", f: r => lblLink(r.package_label) }, { h: "Item", k: "item_name" }, { h: "License", k: "license" },
-    { h: "Adjustment g", k: "grams", n: 1, f: r => `<b class="${r.grams < 0 ? "neg" : ""}">${fmt(r.grams, 1)}</b>` }, { h: "% of pkg", k: "pct_of_package", n: 1, f: r => r.pct_of_package == null ? "" : fmt(r.pct_of_package, 1) + "%" },
-    { h: "Reason", k: "reason" }, { h: "Note", k: "note" }, { h: "User", k: "adjusted_by" }, { h: "Flag", f: r => (r.flag_size ? `<span class="tag bad">≥1,000g</span> ` : "") + (r.flag_pct ? `<span class="tag warn">≥10%</span>` : "") }], d.flagged);
+  A.d = d; renderA();
   grid("auser", [{ h: "User", k: "user", f: r => `<b>${esc(r.user)}</b>` }, { h: "Adjustments", k: "count", n: 1 }, { h: "Net g", k: "net_g", n: 1, f: r => fmt(r.net_g, 1) }, { h: "Flagged", k: "flagged", n: 1 }, { h: "", f: () => `<span class="muted">details ›</span>` }], d.by_user, { click: r => openUserAdj(r.user) });
 } catch (e) { fail("atable", e); } };
 $("adays").onchange = loaders.adj;
+const A = { d: null, f: "all" };
+function renderA() { const F = A.d.flagged, B = { all: r => true, size: r => r.flag_size, pct: r => r.flag_pct, down: r => r.grams < 0, up: r => r.grams > 0 };
+  bucketCards("ak", [{ key: "all", label: "All flagged", n: F.length }, { key: "size", label: "≥ 1,000g", n: F.filter(B.size).length }, { key: "pct", label: "≥ 10% of package", n: F.filter(B.pct).length }, { key: "down", label: "Decreases", n: F.filter(B.down).length }, { key: "up", label: "Increases", n: F.filter(B.up).length }],
+    A.f, k => { A.f = k; renderA(); });
+  grid("atable", [{ h: "Date", k: "adjustment_date" }, { h: "Tag", k: "package_label", f: r => lblLink(r.package_label) }, { h: "Item", k: "item_name" }, { h: "License", k: "license" },
+    { h: "Adjustment g", k: "grams", n: 1, f: r => `<b class="${r.grams < 0 ? "neg" : ""}">${fmt(r.grams, 1)}</b>` }, { h: "% of pkg", k: "pct_of_package", n: 1, f: r => r.pct_of_package == null ? "" : fmt(r.pct_of_package, 1) + "%" },
+    { h: "Reason", k: "reason" }, { h: "Note", k: "note" }, { h: "User", k: "adjusted_by" }, { h: "Flag", f: r => (r.flag_size ? `<span class="tag bad">≥1,000g</span> ` : "") + (r.flag_pct ? `<span class="tag warn">≥10%</span>` : "") }], F.filter(B[A.f] || B.all)); }
 
 const AU = { rows: [] };
 function renderAU() { const s = $("asrc").value, f = $("afind").value, q = $("aq").value.toLowerCase();
+  const base = AU.rows.filter(r => (!s || r.src === s));
+  bucketCards("audk", [{ key: "", label: "All issues", n: base.length }, ...[...new Set(AU.rows.map(r => r.finding))].map(x => ({ key: x, label: x, n: base.filter(r => r.finding === x).length }))], f, k => { $("afind").value = k; renderAU(); });
   grid("audtable", [{ h: "Source", k: "src" }, { h: "App name", k: "name" }, { h: "App #", k: "metrc_number" }, { h: "Batch", k: "batch" }, { h: "App status", k: "app_status" },
     { h: "App qty", k: "app_qty", n: 1, f: r => fmt(r.app_qty, 1) + " " + esc(r.app_uom) }, { h: "METRC tag", k: "label", f: r => lblLink(r.label) }, { h: "METRC item", k: "metrc_item" },
     { h: "METRC qty", k: "metrc_qty", n: 1, f: r => r.metrc_qty == null ? "" : fmt(r.metrc_qty, 1) + " " + esc(r.metrc_uom) }, { h: "Diff", k: "diff", n: 1, f: r => r.diff == null ? "" : `<b class="${+r.diff ? "neg" : ""}">${fmt(r.diff, 1)}</b>` },
@@ -412,7 +430,6 @@ function renderAU() { const s = $("asrc").value, f = $("afind").value, q = $("aq
     AU.rows.filter(r => (!s || r.src === s) && (!f || r.finding === f) && (!q || [r.name, r.metrc_number, r.batch, r.label, r.metrc_item].join(" ").toLowerCase().includes(q)))); }
 loaders.audit = async () => { $("audtable").textContent = "Loading…"; try { const d = await api("audit"); AU.rows = d.rows;
   $("anote").innerHTML = `Non-archived N1 app batches (concentrate, vape, flower) matched to METRC by the app's METRC # (last 5 digits of the tag). N1 app snapshot: <b>${d.snapshot_at ? new Date(d.snapshot_at).toLocaleString() : "—"}</b>. 4g concentrate and vapes are compared in units. "Not in METRC data" can also mean the tag went inactive before 2026, which isn't synced.`;
-  $("audsum").innerHTML = d.summary.filter(x => x.finding !== "ok").map(x => `<div class="stat"><b>${x.n}</b><span>${esc(x.src)} · ${esc(x.finding)}</span></div>`).join("");
   $("afind").innerHTML = `<option value="">All findings</option>` + [...new Set(AU.rows.map(r => r.finding))].map(x => `<option>${esc(x)}</option>`).join(""); renderAU();
 } catch (e) { fail("audtable", e); } };
 ["asrc", "afind"].forEach(id => $(id).onchange = renderAU); $("aq").oninput = renderAU;
@@ -617,8 +634,13 @@ const OUT = { rows: [] };
 $("ofrom").value = daysAgo(30); $("oto").value = iso(new Date());
 loaders.out = async () => { $("otable").textContent = "Loading…"; try {
   OUT.rows = await api("outgoing", { from: $("ofrom").value, to: $("oto").value, license: $("olic").value }); renderOut(); } catch (e) { fail("otable", e); } };
+OUT.f = "all";
 function renderOut() { const q = $("oq").value.toLowerCase(), ty = $("otype").value;
-  const rows = OUT.rows.filter(r => (!ty || r.destination_type === ty) && (!q || [r.manifest_number, r.recipient_name, r.recipient_license, r.invoice_number].join(" ").toLowerCase().includes(q)));
+  const base = OUT.rows.filter(r => (!ty || r.destination_type === ty) && (!q || [r.manifest_number, r.recipient_name, r.recipient_license, r.invoice_number].join(" ").toLowerCase().includes(q)));
+  const B = { all: r => true, pending: r => !r.received_at && !r.voided, received: r => !!r.received_at, rejected: r => r.rejected_pkgs > 0 };
+  bucketCards("ok2", [{ key: "all", label: "All outgoing", n: base.length }, { key: "pending", label: "Not yet received", n: base.filter(B.pending).length }, { key: "received", label: "Received", n: base.filter(B.received).length }, { key: "rejected", label: "With rejections", n: base.filter(B.rejected).length }],
+    OUT.f, k => { OUT.f = k; renderOut(); });
+  const rows = base.filter(B[OUT.f] || B.all);
   $("otype").innerHTML = `<option value="">All destination types</option>` + [...new Set(OUT.rows.map(r => r.destination_type))].sort().map(t => `<option ${t === ty ? "selected" : ""}>${esc(t)}</option>`).join("");
   const s = (k) => rows.reduce((a, r) => a + (+r[k] || 0), 0);
   $("ostats").innerHTML = `<div class="stat"><b>${rows.length}</b><span>manifests</span></div><div class="stat"><b>${fmt(s("pkgs_loaded"))}</b><span>packages</span></div><div class="stat"><b>${fmt(s("shipped_lb"), 2)}</b><span>lbs shipped</span></div><div class="stat"><b>${fmt(s("shipped_units"))}</b><span>units</span></div><div class="stat"><b>$${fmt(s("shipper_total"), 2)}</b><span>shipper $</span></div>`;
@@ -816,7 +838,7 @@ function goPreset(go) {
   const [tab, p] = go.split(":");
   if (tab === "inv") { $("istat").value = p || "active"; $("iq").value = ""; $("ilic").value = ""; $("icat").value = ""; show("inv"); loaders.inv(); return; }
   if (tab === "testing") { T.b = p; $("tq").value = ""; show("testing"); if (T.rows.length) renderT(); return; }
-  if (tab === "xfer") { $("xpend").checked = p === "pending"; $("xself").checked = false; $("xq").value = ""; if ($("xdays").value !== "60") { $("xdays").value = "60"; loaded.xfer = 0; } show("xfer"); if (X.rows.length && loaded.xfer) renderX(); return; }
+  if (tab === "xfer") { X.f = p || "all"; $("xq").value = ""; if ($("xdays").value !== "60") { $("xdays").value = "60"; loaded.xfer = 0; } show("xfer"); if (X.rows.length && loaded.xfer) renderX(); return; }
   if (tab === "adj") { $("adays").value = p || "60"; show("adj"); loaders.adj(); return; }
   show(tab);
 }
@@ -853,6 +875,13 @@ async function openUserAdj(user) {
     $("uacsv").onclick = () => download(`Adjustments_${user.replace(/\W+/g, "_")}_${days}d.csv`, toCSV(rows, [["Date", "adjustment_date"], ["Tag", "package_label"], ["Item", "item_name"], ["Category", "category"], ["License", "license"], ["Qty", "quantity"], ["UoM", "uom"], ["Grams", "grams"], ["% of package", "pct_of_package"], ["Reason", "reason"], ["Note", "note"], ["User", "adjusted_by"]]));
     $("ualist").onclick = async () => { const L = await addToListPrompt([...new Set(rows.map(r => r.package_label))]); if (L) $("ualist").textContent = `Added to "${L.name}" ✓`; };
   } catch (e) { fail("uab", e); }
+}
+
+
+// ---------- bucket selector cards (same pattern as Testing)
+function bucketCards(el, defs, cur, pick) {
+  $(el).innerHTML = defs.map(d => `<div class="kpi ${d.key === cur ? "dark" : ""}" data-bk="${esc(d.key)}"><b>${d.n == null ? "—" : fmt(d.n)}</b><span>${esc(d.label)}</span></div>`).join("");
+  $(el).querySelectorAll("[data-bk]").forEach(c => c.onclick = () => pick(c.dataset.bk));
 }
 
 // ---------- package lookup typeahead
