@@ -101,7 +101,7 @@ body:before{opacity:.04}
 <div id="pstats"></div><div class="chart"><canvas id="pchart"></canvas></div><div id="ptable"></div></section>
 
 <section id="inv" class="tab"><h2>Inventory</h2><div class="note">All synced packages. Click any row for metrics: source and child packages, yield, adjustments, lab results and COA.</div>
-<div class="tools"><select id="istat"><option value="active">Active</option><option value="inactive">Inactive</option><option value="all">All</option></select><select id="ilic"><option value="">All licenses</option></select><select id="icat"><option value="">All categories</option></select><input id="iq" placeholder="Tag, item or batch…" size="26"><button class="b" id="igo">Search</button></div><div id="itable"></div></section>
+<div class="tools"><select id="istat"><option value="active">Active</option><option value="onhold">On hold</option><option value="inactive">Inactive</option><option value="all">All</option></select><select id="ilic"><option value="">All licenses</option></select><select id="icat"><option value="">All categories</option></select><input id="iq" placeholder="Tag, item or batch…" size="26"><button class="b" id="igo">Search</button></div><div id="itable"></div></section>
 
 <section id="testing" class="tab"><h2>Testing</h2><div class="kpis" id="tk"></div><div class="tools"><input id="tq" placeholder="Filter…"><select id="tlic"></select></div><div id="ttable"></div></section>
 
@@ -130,7 +130,6 @@ body:before{opacity:.04}
 <div class="tools"><textarea id="wlpaste" rows="2" placeholder="Paste tags or tag endings — e.g. 8408, 8402, 1A4000B00026164000016769" style="width:min(640px,95%);font:500 14px 'Barlow Semi Condensed',sans-serif;padding:6px 9px;border:1px solid var(--g3)"></textarea><button class="b" id="wladd">Add to list</button><span class="muted" id="wlmsg"></span></div>
 <div id="wlamb"></div><div id="wlinfo"></div><div id="wltable"></div></section>
 </main>
-<footer>● Next One Labs · 303.286.3535 · info@next1labs.com</footer>
 <div id="drawer"></div>
 <script>
 const SB = "https://cstqopdbobfcbmphaijl.supabase.co", ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNzdHFvcGRib2JmY2JtcGhhaWpsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI1Mjc1ODQsImV4cCI6MjEwODEwMzU4NH0._NW7IvBHx1muA32MfC-5uE5aYU1BOvxWb6EfQiVuvlk";
@@ -187,9 +186,9 @@ const LICS = ["404R-00220", "404-00561", "404R-00301", "403R-00713", "403-01881"
 loaders.home = async () => { try {
   const h = await api("home");
   const k = [["Active packages", fmt(h.active_packages), "inv", 1], ["Awaiting results", h.awaiting, "testing"], ["Failed tests (active)", h.failed, "testing"], ["Results back · 14d", h.returned_14d, "testing"],
-    ["Unreceived manifests", h.unreceived, "xfer"], ["Flagged adj. · 7d", h.big_adj_7d, "adj"], ["N1 app mismatches", h.audit_issues, "audit"], ["On hold", h.on_hold, "inv"]];
+    ["Unreceived manifests", h.unreceived, "xfer"], ["Flagged adj. · 7d", h.big_adj_7d, "adj"], ["N1 app mismatches", h.audit_issues, "audit"], ["On hold", h.on_hold, "inv:onhold"]];
   $("hk").innerHTML = k.map(([t, v, go, dark]) => `<div class="kpi" data-go="${go}"><b>${esc(v)}</b><span>${t}</span></div>`).join("");
-  $("hk").querySelectorAll(".kpi").forEach(d => d.onclick = () => show(d.dataset.go));
+  $("hk").querySelectorAll(".kpi").forEach(d => d.onclick = () => { const [tab, st] = d.dataset.go.split(":"); if (st) { $("istat").value = st; $("iq").value = ""; $("ilic").value = ""; $("icat").value = ""; show(tab); loaders.inv(); } else show(tab); });
   grid("hprod", [{ h: "Category", k: "category" }, { h: "Pkgs", k: "pkgs", n: 1 }, { h: "Grams", k: "g", n: 1, f: r => fmt(r.g) }, { h: "Lbs", k: "g", n: 1, f: r => lb(r.g) }, { h: "Units", k: "units", n: 1, f: r => fmt(r.units) }], h.production_7d);
   grid("hadj", [{ h: "Date", k: "adjustment_date" }, { h: "Tag", k: "package_label", f: r => lblLink(r.package_label) }, { h: "Item", k: "item_name" }, { h: "g", k: "grams", n: 1, f: r => `<span class="${r.grams < 0 ? "neg" : ""}">${fmt(r.grams, 1)}</span>` }, { h: "User", k: "adjusted_by" }], h.recent_adj);
 } catch (e) { fail("hk", e); } };
