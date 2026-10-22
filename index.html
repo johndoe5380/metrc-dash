@@ -43,6 +43,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 #lk{margin-left:auto;position:relative}#lk input{width:280px;font-size:15px;padding:7px 10px;border:2px solid var(--k)}
 #sug{position:absolute;top:100%;right:0;width:440px;max-height:60vh;overflow:auto;background:#fff;border:2px solid var(--k);border-top:0;display:none;z-index:60}
 #sug div{padding:7px 10px;border-bottom:1px solid var(--g2);cursor:pointer}#sug div:hover,#sug div.on{background:var(--k);color:#fff}#sug small{display:block;opacity:.75}
+.tree{border:1px solid var(--g3);background:rgba(255,255,255,.94);padding:6px 10px;max-height:60vh;overflow:auto}.tree details{margin-left:18px;border-left:1px solid var(--g2);padding-left:8px}.tree>details{margin-left:0;border-left:0;padding-left:0}.tree summary{cursor:pointer;padding:3px 0;list-style:none}.tree summary::-webkit-details-marker{display:none}.tree summary:before{content:"▸ ";color:var(--g4)}.tree details[open]>summary:before{content:"▾ "}.tree .leaf:before{content:"• ";color:var(--g4)}.tree .leaf{margin-left:18px;padding:3px 0}.org{display:inline-block;margin-left:6px;font-size:12px;padding:1px 6px;border:1px solid var(--k)}.org.grown{border-color:var(--g4);color:#444}
 footer{position:relative;z-index:1;text-align:center;font-weight:500;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#333;padding:16px 0 26px}
 </style></head>
 <body>
@@ -319,9 +320,9 @@ async function openPkg(label) {
     if (childG && orig && p.uom === "g") m += `<div class="stat"><b>${fmt(100 * childG / orig, 2)}%</b><span>went into ${r.children.length} packages (${fmt(childG, 1)}g)</span></div>`;
     $("pb").innerHTML = `<div class="kv">${kv.map(([k, v]) => `<div>${esc(k)}</div><div>${esc(v ?? "")}</div>`).join("")}</div>${m}` +
       (docs.length ? `<div style="margin:8px 0">${docs.map(x => `<button class="b" data-coa="${x}">Open COA ${x}</button>`).join(" ")}</div>` : "") +
-      `<h3>Source packages (${r.parents.length})</h3><div id="pb1"></div><h3>Made from this (${r.children.length})</h3><div id="pb2"></div><h3>Adjustments (${r.adjustments.length})</h3><div id="pb3"></div><h3>Lab results (${r.lab_results.length})</h3><div id="pb4"></div>` + trHtml;
+      `<h3>Lineage — back to original biomass / purchase</h3>${lineageHtml(r.lineage)}<h3>Made from this (${r.children.length})</h3><div id="pb2"></div><h3>Adjustments (${r.adjustments.length})</h3><div id="pb3"></div><h3>Lab results (${r.lab_results.length})</h3><div id="pb4"></div>` + trHtml;
     const sub = [{ h: "Tag", k: "label", f: x => lblLink(x.label) }, { h: "Item", k: "item_name" }, { h: "Original", n: 1, f: x => fmt(x.OriginalPackageQuantity, 2) + " " + esc(x.uom) }, { h: "Now", n: 1, f: x => fmt(x.quantity, 2) + " " + esc(x.uom) }, { h: "Status", k: "status" }];
-    grid("pb1", sub, r.parents, { h: "40vh" }); grid("pb2", [...sub.slice(0, 2), { h: "Packaged", k: "packaged_date" }, ...sub.slice(2)], r.children, { h: "40vh" });
+    grid("pb2", [...sub.slice(0, 2), { h: "Packaged", k: "packaged_date" }, ...sub.slice(2)], r.children, { h: "40vh" });
     grid("pb3", [{ h: "Date", k: "adjustment_date" }, { h: "g", n: 1, f: x => fmt(x.grams, 2) }, { h: "Reason", k: "reason" }, { h: "Note", k: "note" }, { h: "User", k: "adjusted_by" }], r.adjustments);
     grid("pb4", [{ h: "Panel", k: "batch_name" }, { h: "Test", k: "test_type" }, { h: "Result", n: 1, f: x => fmt(x.result_level, 3) }, { h: "Pass", f: x => x.test_passed ? `<span class="tag ok">pass</span>` : `<span class="tag bad">fail</span>` }, { h: "Comment", k: "test_comment" }, { h: "Lab", k: "lab_name" }], r.lab_results, { h: "40vh" }); trGrid();
   } catch (e) { fail("pb", e); } }
@@ -529,6 +530,32 @@ function eomCat(cat) {
 
 // ---------- only cards that do something on click get hover/pointer
 document.addEventListener("mouseover", e => { const k = e.target.closest(".kpi"); if (k && !k.classList.contains("act") && (k.onclick || k.dataset.go || k.dataset.b)) k.classList.add("act"); });
+
+// ---------- lineage tree (package -> sources -> ... -> original biomass / purchase)
+function lineageHtml(L) {
+  if (!L || !L.length) return `<div class="muted">No source packages.</div>`;
+  const kids = {}; L.forEach(n => { if (n.parent_of) (kids[n.parent_of] = kids[n.parent_of] || []).push(n); });
+  const root = L.find(n => n.depth === 0);
+  const line = n => {
+    const qty = n.orig_qty != null ? `${fmt(n.orig_qty, 2)} ${esc(n.uom || "")}` : "";
+    let org = "";
+    if (n.received_from) org = `<span class="org">← ${esc(n.received_from)} (${esc(n.received_license || "")}) · manifest ${mfLink(n.transfer_id, n.manifest)} · ${esc((n.received_at || "").slice(0, 10))}${n.price != null ? ` · $${fmt(n.price, 2)}${n.price_per_lb ? ` ($${fmt(n.price_per_lb, 2)}/lb)` : ""}` : ""}</span>`;
+    else if (!n.has_parents) org = `<span class="org grown">origin · harvest ${esc(n.harvest || "—")}</span>`;
+    const cost = n.depth > 0 && n.cost_per_lb != null && !n.received_from ? ` <span class="muted" style="font-size:12px">· biomass $${fmt(n.cost_per_lb, 2)}/lb</span>` : "";
+    return `${lblLink(n.label)} <b>${esc(n.item_name || "")}</b> <span class="muted">${esc(n.category || "")} · ${qty} · ${esc(n.packaged_date || "")} · ${esc(n.license || "")}</span>${cost}${org}`;
+  };
+  const seen = new Set();
+  const node = (n, d) => {
+    const ch = (kids[n.label] || []).filter(c => !seen.has(c.label + "<" + n.label));
+    ch.forEach(c => seen.add(c.label + "<" + n.label));
+    if (!ch.length) return `<div class="leaf">${line(n)}</div>`;
+    return `<details ${d < 3 ? "open" : ""}><summary>${line(n)} <span class="muted">(${ch.length} source${ch.length > 1 ? "s" : ""})</span></summary>${ch.map(c => node(c, d + 1)).join("")}</details>`;
+  };
+  const origins = L.filter(n => n.depth > 0 && (n.received_from || !n.has_parents));
+  const byOrigin = {}; origins.forEach(n => { const k = n.received_from ? `${n.received_from} (${n.received_license})` : `Grown · ${n.harvest || "unknown harvest"}`; byOrigin[k] = byOrigin[k] || { k, n: 0, g: 0, $: 0 }; byOrigin[k].n++; byOrigin[k].g += +n.orig_g || 0; byOrigin[k].$ += +n.price || 0; });
+  return `<div class="note">${origins.length} origin package(s): ${Object.values(byOrigin).map(o => `<b>${esc(o.k)}</b> — ${o.n} pkg, ${fmt(o.g / 453.59237, 2)} lbs${o.$ ? `, $${fmt(o.$, 2)}` : ""}`).join(" · ")}</div><div class="tree">${node(root, 0)}</div>`;
+}
+
 // ---------- package lookup typeahead
 let lkT, lkSeq = 0, lkSel = -1, lkRows = [];
 function lkRender() { const s = $("sug");
