@@ -371,7 +371,7 @@ function grid(el, cols, rows, opts = {}) {
 document.addEventListener("click", e => { if (!e.target.closest(".colbar")) document.querySelectorAll(".colbar.open").forEach(b => b.classList.remove("open")); });
 document.addEventListener("click", async e => {
   const a = e.target.closest("[data-label]"); if (a) { e.preventDefault(); openPkg(a.dataset.label); return; }
-  const pc = e.target.closest("[data-pcoa]"); if (pc) { const t = pc.textContent; pc.textContent = "Pulling…"; try { await openPkgCoa(pc.dataset.pcoa); pc.textContent = "Opened ✓"; } catch (err) { pc.textContent = /No COA/.test(err.message) ? "No COA" : "Failed"; pc.title = err.message; } setTimeout(() => pc.textContent = t, 4000); return; }
+  const pc = e.target.closest("[data-pcoa]"); if (pc) { const t = pc.textContent; pc.textContent = "Pulling…"; try { await openPkgCoa(pc.dataset.pcoa); pc.textContent = "Opened ✓"; } catch (err) { pc.textContent = /not received|received/.test(err.message) ? "Not received yet" : /No COA/.test(err.message) ? "No COA" : "Failed"; pc.title = err.message; } setTimeout(() => pc.textContent = t, 4000); return; }
   const c = e.target.closest("[data-coa]"); if (c) { const t = c.textContent; c.textContent = "Opening…"; try { await openCoa(+c.dataset.coa); c.textContent = "Opened ✓"; } catch (err) { c.textContent = "Failed"; } setTimeout(() => c.textContent = t, 3000); }
 });
 const loaded = {}, loaders = {};
