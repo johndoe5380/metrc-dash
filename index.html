@@ -299,6 +299,19 @@ async function openCoa(id) {
   if (!r.ok) { if (w) w.close(); throw new Error("COA " + r.status); }
   const url = URL.createObjectURL(await r.blob()); if (w) w.location = url; else location.href = url;
 }
+async function openPkgCoa(key) {
+  const w = window.open("", "_blank");
+  try {
+    const r = await fetch(`${SB}/functions/v1/metrc-coa?${/^\d+$/.test(String(key)) ? "package" : "label"}=${encodeURIComponent(key)}`, { headers: { apikey: ANON, Authorization: "Bearer " + ANON, "x-dash-code": code() } });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j.docs || !j.docs.length) throw new Error(j.error || "No COA on file in METRC");
+    const d = await fetch(`${SB}/functions/v1/metrc-coa?id=${j.docs[0].id}`, { headers: { apikey: ANON, Authorization: "Bearer " + ANON, "x-dash-code": code() } });
+    if (!d.ok) throw new Error("COA " + d.status);
+    const url = URL.createObjectURL(await d.blob()); if (w) w.location = url; else location.href = url;
+    return j.docs.length;
+  } catch (e) { if (w) w.close(); throw e; }
+}
+const coaBtn = id => id ? `<button class="b" data-pcoa="${id}" style="padding:1px 8px;font-size:11px">COA</button>` : "";
 const lblLink = l => l ? `<a class="lk lbl" data-label="${esc(l)}">${esc(l)}</a>` : "";
 const tagFor = s => /Fail/.test(s || "") ? "bad" : /Pass/.test(s || "") ? "ok" : "";
 function fail(el, e) { $(el).innerHTML = `<div class="err">${esc(e.message || e)} <button class="b" onclick="refreshView()" style="margin-left:8px">↻ Retry</button></div>`; console.error(e); }
@@ -358,6 +371,7 @@ function grid(el, cols, rows, opts = {}) {
 document.addEventListener("click", e => { if (!e.target.closest(".colbar")) document.querySelectorAll(".colbar.open").forEach(b => b.classList.remove("open")); });
 document.addEventListener("click", async e => {
   const a = e.target.closest("[data-label]"); if (a) { e.preventDefault(); openPkg(a.dataset.label); return; }
+  const pc = e.target.closest("[data-pcoa]"); if (pc) { const t = pc.textContent; pc.textContent = "Pulling…"; try { await openPkgCoa(pc.dataset.pcoa); pc.textContent = "Opened ✓"; } catch (err) { pc.textContent = /No COA/.test(err.message) ? "No COA" : "Failed"; pc.title = err.message; } setTimeout(() => pc.textContent = t, 4000); return; }
   const c = e.target.closest("[data-coa]"); if (c) { const t = c.textContent; c.textContent = "Opening…"; try { await openCoa(+c.dataset.coa); c.textContent = "Opened ✓"; } catch (err) { c.textContent = "Failed"; } setTimeout(() => c.textContent = t, 3000); }
 });
 const loaded = {}, loaders = {};
@@ -540,7 +554,7 @@ async function openManifest(t) {
     $("mb").innerHTML = `<div style="margin:12px 0"><div class="stat"><b>${fmt(sg / 453.592, 3)}</b><span>lbs shipped</span></div><div class="stat"><b>${fmt(rg / 453.592, 3)}</b><span>lbs received</span></div><div class="stat"><b>${fmt(sg, 1)}</b><span>g</span></div><button class="b" id="cpy">Copy lbs</button></div><h3>By item</h3><div id="mb1"></div><h3>Packages</h3><div id="mb2"></div>`;
     grid("mb1", [{ h: "Item", k: "item" }, { h: "Pkgs", k: "n", n: 1 }, { h: "Lbs", k: "g", n: 1, f: r => fmt(r.g / 453.592, 3) }, { h: "g", k: "g", n: 1, f: r => fmt(r.g, 1) }], Object.values(by));
     grid("mb2", [{ h: "Tag", k: "package_label", f: r => lblLink(r.package_label) }, { h: "Item", k: "item_name" }, { h: "Harvest", k: "source_harvest_names" }, { h: "Shipped", k: "shipped_qty", n: 1, f: r => fmt(r.shipped_qty, 2) + " " + esc(r.shipped_uom) },
-      { h: "Lbs", k: "sg", n: 1, f: r => r.sg == null ? `<span class="tag warn">no unit wt</span>` : fmt(r.sg / 453.592, 3) }, { h: "Lab", k: "lab_state", f: r => `<span class="tag ${tagFor(r.lab_state)}">${esc(r.lab_state)}</span>` }], p);
+      { h: "Lbs", k: "sg", n: 1, f: r => r.sg == null ? `<span class="tag warn">no unit wt</span>` : fmt(r.sg / 453.592, 3) }, { h: "Lab", k: "lab_state", f: r => `<span class="tag ${tagFor(r.lab_state)}">${esc(r.lab_state)}</span>` }, { h: "COA", f: r => coaBtn(r.package_label) }], p);
     $("cpy").onclick = e => { navigator.clipboard.writeText(lbs); e.target.textContent = "Copied " + lbs; };
   } catch (e) { fail("mb", e); } }
 
@@ -654,7 +668,7 @@ async function openPkg(label) {
       }
     }
     $("pb").innerHTML = head +
-      sec("Details", `<div class="kv">${kv.map(([k, v]) => `<div>${esc(k)}</div><div>${esc(v ?? "")}</div>`).join("")}</div>${m}` + (docs.length ? `<div style="margin:8px 0">${docs.map(x => `<button class="b" data-coa="${x}">Open COA ${x}</button>`).join(" ")}</div>` : ""), true) +
+      sec("Details", `<div class="kv">${kv.map(([k, v]) => `<div>${esc(k)}</div><div>${esc(v ?? "")}</div>`).join("")}</div>${m}` + (docs.length ? `<div style="margin:8px 0">${docs.map(x => `<button class="b" data-coa="${x}">Open COA ${x}</button>`).join(" ")}</div>` : (p.id && /Pass|Fail/.test(p.lab_state || "") ? `<div style="margin:8px 0"><button class="b" data-pcoa="${p.id}">Pull COA from METRC</button> <span class="muted">lab results not mirrored yet · one METRC call, then saved</span></div>` : "")), true) +
       sec(`History (${(r.timeline || []).length} events)`, timelineHtml(r.timeline), false) +
       sec("Lineage — back to original biomass / purchase", lineageHtml(r.lineage), false) +
       sec(`Made from this (${r.children.length})`, `<div id="pb2"></div>`, false) +
@@ -794,7 +808,7 @@ async function openManifestById(tid) { lastDrawer = () => openManifestById(tid);
     grid("mfp", [{ h: "Tag", k: "package_label", f: r => lblLink(r.package_label) + ` <button class="b" data-addlist="${esc(r.package_label)}" style="padding:1px 8px;font-size:11px">+ List</button>` }, { h: "Item", k: "item_name" }, { h: "Category", k: "category" },
       { h: "Shipped", k: "shipped_qty", n: 1, f: r => fmt(r.shipped_qty, 2) + " " + esc(r.shipped_uom) }, { h: "Received", k: "received_qty", n: 1, f: r => r.received_qty == null ? "" : fmt(r.received_qty, 2) + " " + esc(r.received_uom) },
       { h: "Lbs", k: "grams", n: 1, f: r => fmt(r.grams / 453.59237, 3) }, ...(price ? [{ h: "Shipper $", k: "shipper_price", n: 1, f: r => r.shipper_price == null ? "" : fmt(r.shipper_price, 2) }, { h: "Receiver $", k: "receiver_price", n: 1, f: r => r.receiver_price == null ? "" : fmt(r.receiver_price, 2) }, { h: "$/lb", n: 1, f: r => +r.shipper_price > 0 && r.grams ? fmt(r.shipper_price / (r.grams / 453.59237), 2) : "" }] : []),
-      { h: "State", k: "state", f: r => `<span class="tag ${/Reject|Return/.test(r.state || "") ? "bad" : ""}">${esc(r.state)}</span>` }, { h: "Lab", k: "lab_state", f: r => `<span class="tag ${tagFor(r.lab_state)}">${esc(r.lab_state)}</span>` }, { h: "Harvest", k: "source_harvests" }], P);
+      { h: "State", k: "state", f: r => `<span class="tag ${/Reject|Return/.test(r.state || "") ? "bad" : ""}">${esc(r.state)}</span>` }, { h: "Lab", k: "lab_state", f: r => `<span class="tag ${tagFor(r.lab_state)}">${esc(r.lab_state)}</span>` }, { h: "COA", f: r => coaBtn(r.package_label) }, { h: "Harvest", k: "source_harvests" }], P);
     const mf = h.manifest_number || tid;
     $("mfv").onclick = () => manifestPdf(tid, "view", mf); $("mfd").onclick = () => manifestPdf(tid, "download", mf);
     $("mfl").onclick = e => { const v = (g / 453.59237).toFixed(3); navigator.clipboard.writeText(v); e.target.textContent = "Copied " + v; };
